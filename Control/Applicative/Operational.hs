@@ -89,7 +89,7 @@ runReader = eval . viewA
     where eval :: forall x. ProgramViewA (ReaderI r) x -> r -> x
           eval (Pure a) = pure a
           eval (Instr Ask) = id
-          eval (ff :<*> fa) = eval ff <*> eval fa
+          eval (ff :\<*\> fa) = eval ff \<*\> eval fa
 @
 -}
 data ProgramViewA instr a where
