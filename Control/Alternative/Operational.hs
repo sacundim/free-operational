@@ -73,7 +73,7 @@ instance Functor (ProgramViewA instr) where
     fmap f (Pure a) = Pure (f a)
     fmap f (Instr i) = Pure f :<*> Instr i
     fmap f (ff :<*> fa) = ((f .) <$> ff) :<*> fa
-    fmap f Empty = Empty
+    fmap _ Empty = Empty
     fmap f (fl :<|> fr) = fmap f fl :<|> fmap f fr
 
 instance Applicative (ProgramViewA instr) where
@@ -92,5 +92,6 @@ compileA :: ProgramViewA instr a -> ProgramA instr a
 compileA (Pure a) = pure a
 compileA (Instr i) = singleton i
 compileA (ff :<*> fa) = compileA ff <*> compileA fa
-
+compileA Empty = empty
+compileA (fl :<|> fr) = compileA fl <|> compileA fr
 
