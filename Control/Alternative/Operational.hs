@@ -11,7 +11,6 @@ module Control.Alternative.Operational
 
     , ProgramViewA(..)
     , viewA
-    , compileA
     ) where
 
 import Control.Applicative
@@ -19,30 +18,10 @@ import Control.Alternative.Free hiding (Pure)
 import Data.Functor.Yoneda.Contravariant
 
 newtype ProgramA instr a =
-    ProgramA { toAlt :: Alt (Yoneda instr) a }
-             deriving (Functor, Applicative, Alternative)
+    ProgramA { -- | Interpret the program as a free Alternative ('Alt').
+               toAlt :: Alt (Yoneda instr) a 
+             } deriving (Functor, Applicative, Alternative)
 
-{-| Example:
-
-@
-data CutI a where
-    Cut :: ProgramA CutI a -> CutI a
-
-cut :: ProgramA CutI a -> ProgramA CutI a
-cut = singleton . Cut
-
-runCut :: ProgramA CutI a -> [a]
-runCut = interpretA evalI
-    where evalI :: forall x. CutI x -> [x]
-          evalI (Cut prog) = safeHead (runCut prog)
-          safeHead [] = []
-          safeHead (x:_) = [x]
-
-example :: [Int]
-example = runCut $ (+) \<$\> pure 5 \<*\> (cut (pure 7 \<|>\ pure 6))
--- >>> [12]
-@
--}
 interpretA :: forall instr f a. Alternative f =>
               (forall x. instr x -> f x)
            -> ProgramA instr a 
@@ -87,11 +66,3 @@ instance Alternative (ProgramViewA instr) where
 
 viewA :: ProgramA instr a -> ProgramViewA instr a
 viewA = interpretA Instr
-
-compileA :: ProgramViewA instr a -> ProgramA instr a
-compileA (Pure a) = pure a
-compileA (Instr i) = singleton i
-compileA (ff :<*> fa) = compileA ff <*> compileA fa
-compileA Empty = empty
-compileA (fl :<|> fr) = compileA fl <|> compileA fr
-

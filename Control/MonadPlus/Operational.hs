@@ -18,8 +18,9 @@ import Control.MonadPlus.Free
 import Data.Functor.Yoneda.Contravariant
 
 newtype Program instr a = 
-    Program { toFree :: Free (Yoneda instr) a }
-            deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
+    Program { -- | Interpret the program as a free 'MonadPlus'.
+              toFree :: Free (Yoneda instr) a 
+            } deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
 
 interpret :: forall m instr a. (Functor m, MonadPlus m) => 
              (forall x. instr x -> m x)

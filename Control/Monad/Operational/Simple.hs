@@ -7,9 +7,9 @@
 module Control.Monad.Operational.Simple 
     ( Program(..)
     , singleton
+    , interpret
     , ProgramView(..)
     , view
-    , interpret
     ) where
 
 import Control.Applicative
@@ -17,12 +17,16 @@ import Control.Monad.Free
 import Data.Functor.Yoneda.Contravariant
 
 
-newtype Program instr a = Program { toFree :: Free (Yoneda instr) a }
-    deriving (Functor, Applicative, Monad)
+newtype Program instr a = 
+    Program { -- | Intepret the program as a 'Free' monad.
+              toFree :: Free (Yoneda instr) a 
+            } deriving (Functor, Applicative, Monad)
 
 singleton :: instr a -> Program instr a
 singleton = Program . liftF . Yoneda id
 
+-- | Interpret a 'Program' by translating each instruction to a
+-- 'Monad' action.  Does not use 'view'.
 interpret :: forall m instr a. (Functor m, Monad m) => 
              (forall x. instr x -> m x)
           -> Program instr a
@@ -34,8 +38,6 @@ interpret evalI = retract . hoistFree evalF . toFree
 data ProgramView instr a where
     Return :: a -> ProgramView instr a
     (:>>=) :: instr a -> (a -> Program instr b) -> ProgramView instr b
-    MEmpty :: ProgramView instr a
-    MPlus :: ProgramView instr a -> ProgramView instr a -> ProgramView instr a
 
 view :: Program instr a -> ProgramView instr a
 view = eval . toFree 

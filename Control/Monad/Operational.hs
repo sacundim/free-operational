@@ -83,8 +83,9 @@ interpret evalI = Free.retract . Free.hoistFree evalF . toFree
 
 
 newtype ProgramT instr m a = 
-    ProgramT { toFreeT :: FreeT (Yoneda instr) m a }
-            deriving (Functor, Applicative, Monad, MonadTrans)
+    ProgramT { -- | Interpret a program as a free monad transformer ('FreeT').
+               toFreeT :: FreeT (Yoneda instr) m a 
+             } deriving (Functor, Applicative, Monad, MonadTrans)
 
 singleton :: Monad m => instr a -> ProgramT instr m a
 singleton = ProgramT . liftF . Yoneda id
@@ -94,10 +95,12 @@ data ProgramViewT instr m a where
     Return :: a -> ProgramViewT instr m a
     (:>>=) :: instr a -> (a -> ProgramT instr m b) -> ProgramViewT instr m b
 
+infixl 1 :>>=
+
 viewT :: Monad m => ProgramT instr m a -> m (ProgramViewT instr m a)
 viewT = liftM eval . runFreeT . toFreeT
     where eval (Pure a) = Return a
-          eval (Free (Yoneda f i)) = i :>>= (ProgramT . f)
+          eval (Free (Yoneda f i)) = i :>>= ProgramT . f
 
 liftProgram :: Monad m => Program instr a -> ProgramT instr m a
 liftProgram = ProgramT . hoistFreeT (return . runIdentity) . toFreeT
