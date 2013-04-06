@@ -47,6 +47,7 @@ library
   exposed-modules:  Control.Applicative.Operational,
                     Control.Alternative.Operational,
                     Control.Monad.Operational,
+                    Control.Monad.Operational.Simple,
                     Control.MonadPlus.Operational
   
   -- Modules included in this library but not exported.
