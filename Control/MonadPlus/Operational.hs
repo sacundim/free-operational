@@ -1,6 +1,9 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+-- | @operational@-style programs for 'MonadPlus'.  See the
+-- documentation for "Control.Applicative.Operational" and
+-- "Control.Monad.Operational" for guidance on how to use this module.
 module Control.MonadPlus.Operational
     ( Program(..)
     , interpret

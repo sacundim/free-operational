@@ -1,8 +1,11 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
--- | A reconstruction of the `operational` package, but using the
+-- | A reconstruction of the @operational@ package in terms of the
 -- 'FreeT' monad transformer.
+--
+-- This module is meant to be a drop-in replacement for its
+-- counterpart in the @operational@ package.
 module Control.Monad.Operational
     ( Program
     , ProgramView
