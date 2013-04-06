@@ -22,6 +22,8 @@ module Control.Monad.Operational
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Free (Free)
+import qualified Control.Monad.Free as Free
 import Control.Monad.Identity
 import Control.Monad.Trans
 import Control.Monad.Trans.Free
@@ -34,19 +36,34 @@ type ProgramView instr = ProgramViewT instr Identity
 view :: Program instr a -> ProgramView instr a
 view = runIdentity . viewT
 
-interpret :: Monad m =>
+-- | Interpret a 'Program' by interpreting each instruction as a
+-- monadic action.  Unlike 'interpretWithMonad', this soes not use
+-- 'view' nor 'ProgramView'.
+--
+-- This function is not a drop-in replacement for 'interpretWithMonad'
+-- because it has an extra @Functor m@ constraint.
+interpret :: forall m instr a. (Functor m, Monad m) =>
              (forall x. instr x -> m x)
           -> Program instr a
           -> m a
-interpret evalI = eval . view
-    where eval (Return a) = return a
-          eval (i :>>= k) = evalI i >>= interpret evalI . k
+interpret evalI = Free.retract . toFree . transFreeT evalF . toFreeT
+    where evalF :: forall x. Yoneda instr x -> m x
+          evalF (Yoneda f i) = liftM f (evalI i)
 
+toFree :: Functor f => FreeT f Identity a -> Free f a
+toFree = adjust . runIdentity . runFreeT
+    where adjust (Pure a) = Free.Pure a
+          adjust (Free fb) = Free.Free $ fmap toFree fb
+
+-- | This function works the same way as its counterpart in the
+-- @operational@ package, using 'view' and 'ProgramView'.
 interpretWithMonad :: Monad m =>
                       (forall x. instr x -> m x)
                    -> Program instr a
                    -> m a
-interpretWithMonad = interpret
+interpretWithMonad evalI = eval . view
+    where eval (Return a) = return a
+          eval (i :>>= k) = evalI i >>= interpretWithMonad evalI . k
 
 newtype ProgramT instr m a = 
     ProgramT { toFreeT :: FreeT (Yoneda instr) m a }
