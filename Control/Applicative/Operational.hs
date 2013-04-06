@@ -33,24 +33,24 @@ newtype ProgramA instr a =
                toAp :: Ap (Yoneda instr) a }
              deriving (Functor, Applicative)
 
--- | Evaluate a 'ProgramA' by interpreting each instruction as an
--- 'Applicative' action. Example @Reader@ implementation:
---
--- @
---     type Reader r a = ProgramA (ReaderI r) a
---
---     data ReaderI r a where
---         Ask :: ReaderI r r
---
---     ask :: Reader r r
---     ask = singleton Ask
---
---     runReader :: forall r a. Reader r a -> r -> a
---     runReader = interpretA evalI
---         where evalI :: forall a. ReaderI r a -> r -> a
---               evalI Ask = id
--- @
---
+{-| Evaluate a 'ProgramA' by interpreting each instruction as an
+'Applicative' action. Example @Reader@ implementation:
+
+@
+type Reader r a = ProgramA (ReaderI r) a
+
+data ReaderI r a where
+    Ask :: ReaderI r r
+
+ask :: Reader r r
+ask = singleton Ask
+
+runReader :: forall r a. Reader r a -> r -> a
+runReader = interpretA evalI
+    where evalI :: forall a. ReaderI r a -> r -> a
+          evalI Ask = id
+@
+-}
 interpretA :: forall instr f a. Applicative f =>
               (forall x. instr x -> f x)
            -> ProgramA instr a 
@@ -64,34 +64,34 @@ singleton :: instr a -> ProgramA instr a
 singleton = ProgramA . liftAp . Yoneda id
 
 
--- | A friendly concrete tree view type for 'ProgramA'.  Unlike the
--- ':>>=' constructor in the 'ProgramView' type of
--- "Control.Monad.Operational", whose second data member is a
--- continuation function to which to throw a result, our ':<*>'
--- constructor here exposes both subterms as 'ProgramViewA' values.
--- This permits static analysis of a 'ProgramViewA'.
---
--- You can also use the 'ProgramViewA' to interpret the program, in
--- the style of the @operational@ package.  Example @Reader@
--- implementation in this style:
---
--- @
---     type Reader r a = ProgramA (ReaderI r) a
---
---     data ReaderI r a where
---         Ask :: ReaderI r r
---
---     ask :: Reader r r
---     ask = singleton Ask
---
---     runReader :: forall r a. Reader r a -> r -> a
---     runReader = eval . viewA
---         where eval :: forall x. ProgramViewA (ReaderI r) x -> r -> x
---               eval (Pure a) = pure a
---               eval (Instr Ask) = id
---               eval (ff :<*> fa) = eval ff <*> eval fa
--- @
---
+{-| A friendly concrete tree view type for 'ProgramA'.  Unlike the
+':>>=' constructor in the 'ProgramView' type of
+"Control.Monad.Operational", whose second data member is a
+continuation function to which to throw a result, our ':<*>'
+constructor here exposes both subterms as 'ProgramViewA' values.  This
+permits static analysis of a 'ProgramViewA'.
+
+You can also use the 'ProgramViewA' to interpret the program, in the
+style of the @operational@ package.  Example @Reader@ implementation
+in this style:
+
+@
+type Reader r a = ProgramA (ReaderI r) a
+
+data ReaderI r a where
+    Ask :: ReaderI r r
+
+ask :: Reader r r
+ask = singleton Ask
+
+runReader :: forall r a. Reader r a -> r -> a
+runReader = eval . viewA
+    where eval :: forall x. ProgramViewA (ReaderI r) x -> r -> x
+          eval (Pure a) = pure a
+          eval (Instr Ask) = id
+          eval (ff :<*> fa) = eval ff <*> eval fa
+@
+-}
 data ProgramViewA instr a where
     Pure   :: a -> ProgramViewA instr a
     Instr  :: instr a -> ProgramViewA instr a
