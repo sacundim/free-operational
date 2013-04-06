@@ -23,7 +23,7 @@ Example: `Applicative` version of `Reader`:
         where evalI :: forall x. ReaderI r x -> r -> x
               evalI Ask = id
 
-Example: count how many times 'ask' is used in an applicative `Reader`
+Example: count how many times `ask` is used in an applicative `Reader`
 program:
 
     countAsk :: forall r a. Reader r a -> Int
