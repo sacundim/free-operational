@@ -14,11 +14,12 @@ module Control.Alternative.Operational
     ) where
 
 import Control.Applicative
+import qualified Control.Alternative.Free as Free
 import Control.Alternative.Free hiding (Pure)
 import Data.Functor.Yoneda.Contravariant
 
 newtype ProgramA instr a =
-    ProgramA { -- | Interpret the program as a free Alternative ('Alt').
+    ProgramA { -- | Interpret the program as a free 'Alternative' ('Alt').
                toAlt :: Alt (Yoneda instr) a 
              } deriving (Functor, Applicative, Alternative)
 
@@ -36,33 +37,22 @@ singleton = ProgramA . liftAlt . Yoneda id
 
 data ProgramViewA instr a where
     Pure   :: a -> ProgramViewA instr a
-    Instr  :: instr a -> ProgramViewA instr a
-    (:<*>) :: ProgramViewA instr (a -> b) 
-           -> ProgramViewA instr a
-           -> ProgramViewA instr b
+    (:<**>) :: instr a
+            -> ProgramViewA instr (a -> b) 
+            -> ProgramViewA instr b
     Empty  :: ProgramViewA instr a
     (:<|>) :: ProgramViewA instr a 
            -> ProgramViewA instr a
            -> ProgramViewA instr a
 
-infixl 4 :<*>
+-- this is the same fixity as '<**>' and '<|>'; dunno why it's not infixr
+infixl 4 :<**>
 infixl 3 :<|>
 
-instance Functor (ProgramViewA instr) where
-    fmap f (Pure a) = Pure (f a)
-    fmap f (Instr i) = Pure f :<*> Instr i
-    fmap f (ff :<*> fa) = ((f .) <$> ff) :<*> fa
-    fmap _ Empty = Empty
-    fmap f (fl :<|> fr) = fmap f fl :<|> fmap f fr
-
-instance Applicative (ProgramViewA instr) where
-    pure = Pure
-    (<*>) = (:<*>)
-
-instance Alternative (ProgramViewA instr) where
-    empty = Empty
-    (<|>) = (:<|>)
-
-
 viewA :: ProgramA instr a -> ProgramViewA instr a
-viewA = interpretA Instr
+viewA = viewA' . toAlt
+
+viewA' :: Alt (Yoneda instr) a -> ProgramViewA instr a
+viewA' (Free.Pure a) = Pure a
+viewA' (Free.Ap (Yoneda f i) next) = i :<**> viewA' (fmap (.f) next)
+viewA' (Free.Alt xs) = foldr (:<|>) Empty (map viewA' xs)
