@@ -6,7 +6,7 @@ name:                free-operational
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.0.0
+version:             0.0.0.0
 
 synopsis:            Operational-style Applicative, Alternative, Monad and
                       MonadPlus on top of free monads.
