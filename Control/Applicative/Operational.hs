@@ -10,11 +10,11 @@ module Control.Applicative.Operational
 
     , ProgramViewA(..)
     , viewA
-    , foldViewA
     ) where
 
 import Control.Applicative
 import Control.Applicative.Free (Ap, runAp, liftAp)
+import qualified Control.Applicative.Free as Free
 import Data.Functor.Yoneda.Contravariant (Yoneda(..))
 
 
@@ -65,10 +65,19 @@ singleton = ProgramA . liftAp . Yoneda id
 
 -- | A friendly concrete tree view type for 'ProgramA'.  Unlike the
 -- ':>>=' constructor in the 'ProgramView' type of
--- "Control.Monad.Operational", whose second data member is a
--- continuation function to which to throw a result, our ':<*>'
--- constructor here exposes both subterms as 'ProgramViewA' values.
--- This permits static analysis of a 'ProgramViewA'.
+-- "Control.Monad.Operational", whose second data member is a function
+-- that consumes an instruction result to generate the rest of the
+-- program, our ':<**>' constructor exposes the rest of program
+-- immediately.
+--
+-- Note that the 'ProgramViewA' type normalizes the program into a
+-- different ordering and bracketing than the applicative '<*>'
+-- operator does.  The ':<**>' constructor is instead an analogue of
+-- @'<**>' :: Applicative f => f a -> f (a -> b) -> f b@ from
+-- "Control.Applicative", so you get a list-like structure with
+-- instructions as the elements and 'Pure' as the terminator.  The
+-- instructions appear in the same order that their effects are
+-- supposed to happen.
 --
 -- A static analysis example, based on Capriotti and Kaposi (2013,
 -- <http://paolocapriotti.com/blog/2013/04/03/free-applicative-functors/>):
@@ -76,7 +85,7 @@ singleton = ProgramA . liftAp . Yoneda id
 -- > {-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables #-}
 -- >
 -- > import Control.Operational.Applicative
--- >
+-- > 
 -- > data FileSystemI a where
 -- >     Read  :: FilePath -> FileSystemI String 
 -- >     Write :: FilePath -> String -> FileSystemI ()
@@ -85,62 +94,56 @@ singleton = ProgramA . liftAp . Yoneda id
 -- > count :: ProgramA FileSystemI a -> Int
 -- > count = count' . viewA
 -- >     where count' :: forall x. ProgramViewA FileSystemI x -> Int
--- >           count' (Instr _)  = 1
 -- >           count' (Pure _)   = 0
--- >           count' (l :\<*\> r) = count' l + count' r
+-- >           count' (_ :<**> k) = succ (count' k)
 --
--- You can also use the 'ProgramViewA' to interpret the program, in the
--- style of the @operational@ package.  Example @Reader@ implementation
--- in this style:
+-- You can also use the 'ProgramViewA' to interpret the program, in
+-- the style of the @operational@ package.  Example implementation of
+-- a simple terminal language in this style:
 --
--- > type Reader r a = ProgramA (ReaderI r) a
+-- > data TermI a where
+-- >     Say :: String -> TermI ()
+-- >     Get :: TermI String
 -- > 
--- > data ReaderI r a where
--- >     Ask :: ReaderI r r
+-- > say :: String -> ProgramA TermI ()
+-- > say = singleton . Say
 -- > 
--- > ask :: Reader r r
--- > ask = singleton Ask
+-- > get :: ProgramA TermI String
+-- > get = singleton Get
 -- > 
--- > runReader :: forall r a. Reader r a -> r -> a
--- > runReader = eval . viewA
--- >     where eval :: forall x. ProgramViewA (ReaderI r) x -> r -> x
+-- > prompt :: String -> ProgramA TermI String
+-- > prompt str = say str *> get
+-- > 
+-- > runTerm :: ProgramA TermI a -> IO a
+-- > runTerm = eval . viewA
+-- >     where eval :: forall x. ProgramViewA TermI x -> IO x
 -- >           eval (Pure a) = pure a
--- >           eval (Instr Ask) = id
--- >           eval (ff :\<*\> fa) = eval ff \<*\> eval fa
+-- >           eval (Say str :<**> k) = putStr str <**> eval k
+-- >           eval (Get :<**> k)     = getLine    <**> eval k 
+--
+-- But as a general rule, 'interpretA' produces shorter, less
+-- repetitive interpreters:
+-- > runTerm :: ProgramA TermI a -> IO a
+-- > runTerm = interpretA evalI
+-- >     where evalI :: forall x. TermI x -> IO x
+-- >           evalI (Say str)   = putStr str
+-- >           evalI Get         = getLine
+--
 data ProgramViewA instr a where
     Pure   :: a -> ProgramViewA instr a
-    Instr  :: instr a -> ProgramViewA instr a
-    (:<*>) :: ProgramViewA instr (a -> b) 
-           -> ProgramViewA instr a
-           -> ProgramViewA instr b
+    (:<**>) :: instr a
+            -> ProgramViewA instr (a -> b) 
+            -> ProgramViewA instr b
 
-infixl 4 :<*>
-
-instance Functor (ProgramViewA instr) where
-    fmap f (Pure a) = Pure (f a)
-    fmap f (Instr i) = Pure f :<*> Instr i
-    fmap f (ff :<*> fa) = ((f .) <$> ff) :<*> fa
-
-instance Applicative (ProgramViewA instr) where
-    pure = Pure
-    (<*>) = (:<*>)
+infixl 4 :<**>
 
 -- | Materialize a 'ProgramA' as a concrete tree.  Note that
 -- 'ProgramA'\'s 'Functor' and 'Applicative' instances normalize their
 -- programs, so the view term doesn't have to look like the code that
 -- created it.
 viewA :: ProgramA instr a -> ProgramViewA instr a
-viewA = interpretA Instr
+viewA = viewA' . toAp
 
--- | Recursively eliminate a 'ProgramViewA'.
-foldViewA :: forall instr a r.
-             (r -> r -> r)
-          -> (forall x. x -> r)
-          -> (forall x. instr x -> r)
-          -> ProgramViewA instr a
-          -> r
-foldViewA ap pure instr (Pure a) = pure a
-foldViewA ap pure instr (Instr i) = instr i
-foldViewA ap pure instr (l :<*> r) = subfold l `ap` subfold r
-    where subfold :: forall x. ProgramViewA instr x -> r
-          subfold = foldViewA ap pure instr
+viewA' :: Ap (Yoneda instr) a -> ProgramViewA instr a
+viewA' (Free.Pure a) = Pure a
+viewA' (Free.Ap (Yoneda f i) next) = i :<**> viewA' (fmap (.f) next)

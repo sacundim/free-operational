@@ -40,8 +40,7 @@ applicative `Reader` program.
     countAsk = count . viewA
         where count :: forall x. ProgramViewA (ReaderI r) x -> Int
               count (Pure _) = 0
-              count (Instr Ask) = 1
-              count (l :<*> r) = count l + count r
+              count (Ask :<**> k) = succ (count k)
 
 References:
 
@@ -49,3 +48,4 @@ References:
 2. http://www.reddit.com/r/haskell/comments/17a33g/free_functors_the_reason_free_and_operational_are/
 3. http://gergo.erdi.hu/blog/2012-12-01-static_analysis_with_applicatives/
 4. http://paolocapriotti.com/blog/2013/04/03/free-applicative-functors/
+5. http://web.jaguarpaw.co.uk/~tom/blog/2012/09/09/towards-free-applicatives.html
