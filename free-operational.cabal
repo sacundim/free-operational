@@ -31,14 +31,11 @@ description:
     'Applicative' and 'Alternative' programs easily admit of static
     analysis.  See these references for discussion and examples:
     .
-    * <http://gergo.erdi.hu/blog/2012-12-01-static_analysis_with_applicatives/>
+    * <http://gergo.erdi.hu/blog/2012-12-01-static_analysis_with_applicatives/> (discussion: <http://www.reddit.com/r/haskell/comments/143wpd/static_analysis_with_applicatives/>)
     .
-    * (Discussion: <http://www.reddit.com/r/haskell/comments/143wpd/static_analysis_with_applicatives/>)
+    * <http://paolocapriotti.com/blog/2013/04/03/free-applicative-functors/> (discussion: <http://www.reddit.com/r/haskell/comments/1bnql3/free_applicative_functors_icfp_submission/>)
     .
-    * <http://paolocapriotti.com/blog/2013/04/03/free-applicative-functors/> 
-    .
-    * (Discussion: <http://www.reddit.com/r/haskell/comments/1bnql3/free_applicative_functors_icfp_submission/>)
-    .
+    See "Control.Applicative.Operational" for the bulk of the documentation.
 
 license:             BSD3
 license-file:        LICENSE

@@ -19,11 +19,11 @@ import Data.Functor.Yoneda.Contravariant (Yoneda(..))
 
 
 -- | An 'Applicative' program over instruction set @instr@.  This is
--- modeled after the 'Program' type from @Operational@
+-- modeled after the 'Program' type from @operational@
 -- (<http://hackage.haskell.org/package/operational>), but this one is
 -- an 'Applicative', not a 'Monad'.  This makes it less powerful, but
--- in exchange for the sacrificed power, 'ProgramA' is suceptible to
--- stronger static analysis.
+-- in exchange for the sacrificed power 'ProgramA' is suceptible to
+-- much stronger static analysis.
 --
 -- For examples of this (though applied to free applicatives), see:
 --
@@ -72,12 +72,11 @@ singleton = ProgramA . liftAp . Yoneda id
 --
 -- Note that the 'ProgramViewA' type normalizes the program into a
 -- different ordering and bracketing than the applicative '<*>'
--- operator does.  The ':<**>' constructor is instead an analogue of
--- @'<**>' :: Applicative f => f a -> f (a -> b) -> f b@ from
--- "Control.Applicative", so you get a list-like structure with
--- instructions as the elements and 'Pure' as the terminator.  The
--- instructions appear in the same order that their effects are
--- supposed to happen.
+-- operator does.  The ':<**>' constructor is an analogue of @'<**>'
+-- :: Applicative f => f a -> f (a -> b) -> f b@ from
+-- "Control.Applicative".  The normalization means that you get a
+-- list-like structure with instructions as the elements (in the same
+-- order as their effects) and 'Pure' as the terminator.
 --
 -- A static analysis example, based on Capriotti and Kaposi (2013,
 -- <http://paolocapriotti.com/blog/2013/04/03/free-applicative-functors/>):
@@ -120,9 +119,15 @@ singleton = ProgramA . liftAp . Yoneda id
 -- >           eval (Pure a) = pure a
 -- >           eval (Say str :<**> k) = putStr str <**> eval k
 -- >           eval (Get :<**> k)     = getLine    <**> eval k 
+-- >
+-- > example :: ProgramA TermI (String, String)
+-- > example = (,) <$> prompt "First question: " <*> prompt "Second question: "
+-- > 
+-- > -- example = Say "First question: " :<**> (Get :<**> (Say "Second question: " :<**> (Get :<**> Pure (\_ a _ b -> (a, b)))))
 --
--- But as a general rule, 'interpretA' produces shorter, less
--- repetitive interpreters:
+-- But as a general rule, 'interpretA' makes for shorter, less
+-- repetitive, fooler-proof interpreters:
+--
 -- > runTerm :: ProgramA TermI a -> IO a
 -- > runTerm = interpretA evalI
 -- >     where evalI :: forall x. TermI x -> IO x
@@ -135,12 +140,14 @@ data ProgramViewA instr a where
             -> ProgramViewA instr (a -> b) 
             -> ProgramViewA instr b
 
-infixl 4 :<**>
+-- this is the same fixity as '<**>'; dunno why it's not infixr
+infixl 4 :<**>  
 
 -- | Materialize a 'ProgramA' as a concrete tree.  Note that
--- 'ProgramA'\'s 'Functor' and 'Applicative' instances normalize their
--- programs, so the view term doesn't have to look like the code that
--- created it.
+-- 'ProgramA''s 'Functor' and 'Applicative' instances normalize their
+-- programs, so the view term will not have to look like the code that
+-- created it.  Instructions however will appear in the order that
+-- their effects should happen, from left to right.
 viewA :: ProgramA instr a -> ProgramViewA instr a
 viewA = viewA' . toAp
 
