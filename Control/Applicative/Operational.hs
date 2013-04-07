@@ -10,6 +10,7 @@ module Control.Applicative.Operational
 
     , ProgramViewA(..)
     , viewA
+    , foldViewA
     ) where
 
 import Control.Applicative
@@ -130,3 +131,16 @@ instance Applicative (ProgramViewA instr) where
 -- created it.
 viewA :: ProgramA instr a -> ProgramViewA instr a
 viewA = interpretA Instr
+
+-- | Recursively eliminate a 'ProgramViewA'.
+foldViewA :: forall instr a r.
+             (r -> r -> r)
+          -> (forall x. x -> r)
+          -> (forall x. instr x -> r)
+          -> ProgramViewA instr a
+          -> r
+foldViewA ap pure instr (Pure a) = pure a
+foldViewA ap pure instr (Instr i) = instr i
+foldViewA ap pure instr (l :<*> r) = subfold l `ap` subfold r
+    where subfold :: forall x. ProgramViewA instr x -> r
+          subfold = foldViewA ap pure instr
