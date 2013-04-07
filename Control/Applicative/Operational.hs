@@ -10,6 +10,9 @@ module Control.Applicative.Operational
 
     , ProgramViewA(..)
     , viewA
+    , foldProgramViewA
+    , instructions
+    , AnyInstr(..)
     ) where
 
 import Control.Applicative
@@ -95,6 +98,11 @@ singleton = ProgramA . liftAp . Yoneda id
 -- >     where count' :: forall x. ProgramViewA FileSystemI x -> Int
 -- >           count' (Pure _)   = 0
 -- >           count' (_ :<**> k) = succ (count' k)
+-- 
+-- Or actually, just this:
+--
+-- > count :: ProgramA FileSystemI a -> Int
+-- > count = length . instructions
 --
 -- You can also use the 'ProgramViewA' to interpret the program, in
 -- the style of the @operational@ package.  Example implementation of
@@ -154,3 +162,16 @@ viewA = viewA' . toAp
 viewA' :: Ap (Yoneda instr) a -> ProgramViewA instr a
 viewA' (Free.Pure a) = Pure a
 viewA' (Free.Ap (Yoneda f i) next) = i :<**> viewA' (fmap (.f) next)
+
+
+foldProgramViewA :: (forall x. instr x -> r -> r) 
+                 -> r
+                 -> ProgramViewA instr a
+                 -> r
+foldProgramViewA k z (Pure _) = z
+foldProgramViewA k z (i :<**> is) = k i (foldProgramViewA k z is)
+
+instructions :: ProgramA instr a -> [AnyInstr instr]
+instructions = foldProgramViewA (\i -> (AnyInstr i:)) [] . viewA
+
+data AnyInstr instr = forall a. AnyInstr (instr a)

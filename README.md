@@ -42,6 +42,13 @@ applicative `Reader` program.
               count (Pure _) = 0
               count (Ask :<**> k) = succ (count k)
 
+Or even shorter for this one-instruction language:
+
+    countAsk :: forall r a. Reader r a -> Int
+    countAsk = length . instructions
+
+
+
 References:
 
 1. http://stackoverflow.com/questions/14263363/is-operational-really-isomorphic-to-a-free-monad
