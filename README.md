@@ -42,11 +42,11 @@ applicative `Reader` program.
               count (Pure _) = 0
               count (Ask :<**> k) = succ (count k)
 
-Or even shorter for this one-instruction language:
+Since this `Reader` language only has one instruction, we can cheat
+and make this even shorter:
 
     countAsk :: forall r a. Reader r a -> Int
     countAsk = length . instructions
-
 
 
 References:
