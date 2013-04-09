@@ -22,6 +22,9 @@ newtype Program instr a =
               toFree :: Free (Yoneda instr) a 
             } deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
 
+singleton :: instr a -> Program instr a
+singleton = Program . liftF . Yoneda id
+
 interpret :: forall m instr a. (Functor m, MonadPlus m) => 
              (forall x. instr x -> m x)
           -> Program instr a
