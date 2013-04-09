@@ -6,6 +6,7 @@
 -- "Control.Monad.Operational" for guidance on how to use this module.
 module Control.MonadPlus.Operational
     ( Program(..)
+    , singleton
     , interpret
       
     , ProgramView(..)
