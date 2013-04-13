@@ -20,7 +20,7 @@ Example: `Applicative` version of `Reader`.
 
     import Control.Applicative.Operational
 
-    type Reader r a = ProgramA (ReaderI r) a
+    type Reader r a = ProgramAp (ReaderI r) a
 
     data ReaderI r a where
         Ask :: ReaderI r r
@@ -29,7 +29,7 @@ Example: `Applicative` version of `Reader`.
     ask = singleton Ask
 
     runReader :: forall r a. Reader r a -> r -> a
-    runReader = interpretA evalI
+    runReader = interpretAp evalI
         where evalI :: forall x. ReaderI r x -> r -> x
               evalI Ask = id
 
@@ -37,8 +37,8 @@ Static analysis example: count how many times `ask` is used in an
 applicative `Reader` program.
 
     countAsk :: forall r a. Reader r a -> Int
-    countAsk = count . viewA
-        where count :: forall x. ProgramViewA (ReaderI r) x -> Int
+    countAsk = count . viewAp
+        where count :: forall x. ProgramViewAp (ReaderI r) x -> Int
               count (Pure _) = 0
               count (Ask :<**> k) = succ (count k)
 

@@ -5,54 +5,57 @@
 -- "Control.Applicative.Operational" for guidance on how to use this
 -- module.
 module Control.Alternative.Operational 
-    ( ProgramA(..)
+    ( ProgramAlt(..)
     , singleton
-    , interpretA
+    , interpretAlt
 
-    , ProgramViewA(..)
-    , viewA
+    , ProgramViewAlt(..)
+    , viewAlt
     ) where
 
 import Control.Applicative
 import qualified Control.Alternative.Free as Free
 import Control.Alternative.Free hiding (Pure)
+import Control.Operational.Class
 import Data.Functor.Yoneda.Contravariant
 
-newtype ProgramA instr a =
-    ProgramA { -- | Interpret the program as a free 'Alternative' ('Alt').
-               toAlt :: Alt (Yoneda instr) a 
-             } deriving (Functor, Applicative, Alternative)
+newtype ProgramAlt instr a =
+    ProgramAlt { -- | Interpret the program as a free 'Alternative' ('Alt').
+                 toAlt :: Alt (Yoneda instr) a 
+               } deriving (Functor, Applicative, Alternative)
 
-interpretA :: forall instr f a. Alternative f =>
-              (forall x. instr x -> f x)
-           -> ProgramA instr a 
-           -> f a
-interpretA evalI = runAlt evalF . toAlt
+instance Operational ProgramAlt where
+    singleton = ProgramAlt . liftAlt . Yoneda id
+
+
+interpretAlt :: forall instr f a.
+                Alternative f =>
+               (forall x. instr x -> f x)
+             -> ProgramAlt instr a 
+             -> f a
+interpretAlt evalI = runAlt evalF . toAlt
     where evalF :: forall x. Yoneda instr x -> f x
           evalF (Yoneda k i) = fmap k (evalI i)
 
-singleton :: instr a -> ProgramA instr a
-singleton = ProgramA . liftAlt . Yoneda id
 
-
-data ProgramViewA instr a where
-    Pure   :: a -> ProgramViewA instr a
+data ProgramViewAlt instr a where
+    Pure    :: a -> ProgramViewAlt instr a
     (:<**>) :: instr a
-            -> ProgramViewA instr (a -> b) 
-            -> ProgramViewA instr b
-    Empty  :: ProgramViewA instr a
-    (:<|>) :: ProgramViewA instr a 
-           -> ProgramViewA instr a
-           -> ProgramViewA instr a
+            -> ProgramViewAlt instr (a -> b) 
+            -> ProgramViewAlt instr b
+    Empty   :: ProgramViewAlt instr a
+    (:<|>)  :: ProgramViewAlt instr a 
+            -> ProgramViewAlt instr a
+            -> ProgramViewAlt instr a
 
 -- this is the same fixity as '<**>' and '<|>'; dunno why it's not infixr
 infixl 4 :<**>
 infixl 3 :<|>
 
-viewA :: ProgramA instr a -> ProgramViewA instr a
-viewA = viewA' . toAlt
+viewAlt :: ProgramAlt instr a -> ProgramViewAlt instr a
+viewAlt = viewAlt' . toAlt
 
-viewA' :: Alt (Yoneda instr) a -> ProgramViewA instr a
-viewA' (Free.Pure a) = Pure a
-viewA' (Free.Ap (Yoneda f i) next) = i :<**> viewA' (fmap (.f) next)
-viewA' (Free.Alt xs) = foldr (:<|>) Empty (map viewA' xs)
+viewAlt' :: Alt (Yoneda instr) a -> ProgramViewAlt instr a
+viewAlt' (Free.Pure a) = Pure a
+viewAlt' (Free.Ap (Yoneda f i) next) = i :<**> viewAlt' (fmap (.f) next)
+viewAlt' (Free.Alt xs) = foldr (:<|>) Empty (map viewAlt' xs)

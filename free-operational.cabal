@@ -6,7 +6,7 @@ name:                free-operational
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.0.0.0
+version:             0.1.0.0
 
 synopsis:            Operational-style Applicative, Alternative, Monad and
                       MonadPlus on top of free monads.
@@ -54,7 +54,8 @@ cabal-version:       >=1.8
 
 
 library
-  exposed-modules:  Control.Applicative.Operational,
+  exposed-modules:  Control.Operational.Class,
+                    Control.Applicative.Operational,
                     Control.Alternative.Operational,
                     Control.Monad.Operational,
                     Control.Monad.Operational.Simple,

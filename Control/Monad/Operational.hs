@@ -13,6 +13,11 @@
 --   @operational@.  If you don't care for that,
 --   "Control.Monad.Operational.Simple" implements them directly in
 --   terms of 'Free'.
+--
+-- * This module doesn't use the generic version of @singleton@ that
+--   other modules in this package do, because I haven't figured out
+--   (possibly through lack of trying) how to make the type class
+--   compatible with the 'ProgramT' type.
 module Control.Monad.Operational
     ( Program
     , ProgramView
@@ -86,6 +91,7 @@ newtype ProgramT instr m a =
     ProgramT { -- | Interpret a program as a free monad transformer ('FreeT').
                toFreeT :: FreeT (Yoneda instr) m a 
              } deriving (Functor, Applicative, Monad, MonadTrans)
+
 
 singleton :: Monad m => instr a -> ProgramT instr m a
 singleton = ProgramT . liftF . Yoneda id

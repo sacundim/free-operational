@@ -14,6 +14,7 @@ module Control.Monad.Operational.Simple
 
 import Control.Applicative
 import Control.Monad.Free
+import Control.Operational.Class
 import Data.Functor.Yoneda.Contravariant
 
 
@@ -22,8 +23,8 @@ newtype Program instr a =
               toFree :: Free (Yoneda instr) a 
             } deriving (Functor, Applicative, Monad)
 
-singleton :: instr a -> Program instr a
-singleton = Program . liftF . Yoneda id
+instance Operational Program where
+    singleton = Program . liftF . Yoneda id
 
 -- | Interpret a 'Program' by translating each instruction to a
 -- 'Monad' action.  Does not use 'view'.
