@@ -25,7 +25,7 @@ newtype ProgramAlt instr a =
                } deriving (Functor, Applicative, Alternative)
 
 instance Operational ProgramAlt where
-    singleton = ProgramAlt . liftAlt . Yoneda id
+    singleton = ProgramAlt . liftAlt . liftYoneda
 
 
 interpretAlt :: forall instr f a.

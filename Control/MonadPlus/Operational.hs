@@ -25,7 +25,7 @@ newtype ProgramP instr a =
              } deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
 
 instance Operational ProgramP where
-    singleton = ProgramP . liftF . Yoneda id
+    singleton = ProgramP . liftF . liftYoneda
 
 interpret :: forall m instr a. (Functor m, MonadPlus m) => 
              (forall x. instr x -> m x)
@@ -38,7 +38,7 @@ interpret evalI = retract . hoistFree evalF . toFree
 
 data ProgramViewP instr a where
     Return :: a -> ProgramViewP instr a
-    (:>>=) :: instr a -> (a -> Program instr b) -> ProgramViewP instr b
+    (:>>=) :: instr a -> (a -> ProgramP instr b) -> ProgramViewP instr b
     MEmpty :: ProgramViewP instr a
     MPlus  :: ProgramViewP instr a
            -> ProgramViewP instr a

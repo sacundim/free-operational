@@ -24,7 +24,7 @@ newtype Program instr a =
             } deriving (Functor, Applicative, Monad)
 
 instance Operational Program where
-    singleton = Program . liftF . Yoneda id
+    singleton = Program . liftF . liftYoneda
 
 -- | Interpret a 'Program' by translating each instruction to a
 -- 'Monad' action.  Does not use 'view'.

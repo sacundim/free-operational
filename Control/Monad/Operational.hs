@@ -94,7 +94,7 @@ newtype ProgramT instr m a =
 
 
 singleton :: Monad m => instr a -> ProgramT instr m a
-singleton = ProgramT . liftF . Yoneda id
+singleton = ProgramT . liftF . liftYoneda
 
 
 data ProgramViewT instr m a where

@@ -19,7 +19,7 @@ import Control.Applicative
 import Control.Applicative.Free (Ap, runAp, liftAp)
 import qualified Control.Applicative.Free as Free
 import Control.Operational.Class
-import Data.Functor.Yoneda.Contravariant (Yoneda(..))
+import Data.Functor.Yoneda.Contravariant
 
 
 -- | An 'Applicative' program over instruction set @instr@.  This is
@@ -40,7 +40,7 @@ newtype ProgramAp instr a =
               } deriving (Functor, Applicative)
 
 instance Operational ProgramAp where
-    singleton = ProgramAp . liftAp . Yoneda id
+    singleton = ProgramAp . liftAp . liftYoneda
 
 -- | Evaluate a 'ProgramAp' by interpreting each instruction as an
 -- 'Applicative' action. Example @Reader@ implementation:
