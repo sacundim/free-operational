@@ -14,13 +14,9 @@
 --   @operational@.  If you don't care for that,
 --   "Control.Monad.Operational.Simple" implements them directly in
 --   terms of 'Free'.
---
--- * This module doesn't use the generic version of @singleton@ that
---   other modules in this package do, because I haven't figured out
---   (possibly through lack of trying) how to make the type class
---   compatible with the 'ProgramT' type.
 module Control.Monad.Operational
-    ( Program
+    ( module Control.Operational.Class
+    , Program
     , ProgramView
     , view
     , interpretWithMonad
@@ -39,8 +35,10 @@ import Control.Monad.Free (Free)
 import qualified Control.Monad.Free as Free
 import Control.Monad.Identity
 import Control.Monad.Trans
-import Control.Monad.Trans.Free
+import Control.Monad.Trans.Free (FreeT)
+import qualified Control.Monad.Trans.Free as FreeT
 import Control.Monad.Trans.Operational
+import Control.Operational.Class
 import Data.Functor.Yoneda.Contravariant
 
 type Program instr = ProgramT instr Identity
@@ -65,11 +63,11 @@ interpretWithMonad evalI = eval . view
 -- | The 'Free' monad action for a 'Program'.
 toFree :: Program instr a -> Free (Yoneda instr) a
 toFree = freeT2Free . toFreeT
-
-freeT2Free :: Functor f => FreeT f Identity a -> Free f a
-freeT2Free = adjust . runIdentity . runFreeT
-    where adjust (Pure a) = Free.Pure a
-          adjust (Free fb) = Free.Free $ fmap freeT2Free fb
+    where
+      freeT2Free :: Functor f => FreeT f Identity a -> Free f a
+      freeT2Free = adjust . runIdentity . FreeT.runFreeT
+          where adjust (FreeT.Pure a) = Free.Pure a
+                adjust (FreeT.Free fb) = Free.Free $ fmap freeT2Free fb
 
 -- | Interpret a 'Program' by interpreting each instruction as a
 -- monadic action.  Unlike 'interpretWithMonad', this soes not use
@@ -86,4 +84,4 @@ interpret evalI = Free.retract . Free.hoistFree evalF . toFree
           evalF (Yoneda f i) = liftM f (evalI i)
 
 liftProgram :: Monad m => Program instr a -> ProgramT instr m a
-liftProgram = ProgramT . hoistFreeT (return . runIdentity) . toFreeT
+liftProgram = interpret singleton
