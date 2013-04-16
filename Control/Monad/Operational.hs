@@ -20,16 +20,14 @@
 module Control.Monad.Operational
     ( module Control.Operational.Class
     , Program
+    , toFree
+    , fromProgram
+    , liftProgram
+    , interpret
+    , interpretWithMonad
     , ProgramView
     , view
-    , interpretWithMonad
-
-    , toFree
-    , interpret
-
     , module Control.Monad.Trans.Operational
-
-    , liftProgram
     ) where
 
 import Control.Applicative
