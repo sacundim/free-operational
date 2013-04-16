@@ -1,15 +1,13 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -- | 'Applicative' programs over an @operational@-style instruction
 -- set, implemented on top of the 'Ap' free 'Applicative' type.
 module Control.Applicative.Operational 
-    ( ProgramAp(..)
-    , singleton
-    , interpretAp
-
+    ( module Control.Operational.Class
+    , ProgramAp(..)
     , ProgramViewAp(..)
-    , viewAp
     , foldProgramViewAp
     , instructions
     , AnyInstr(..)
@@ -40,7 +38,11 @@ newtype ProgramAp instr a =
               } deriving (Functor, Applicative)
 
 instance Operational ProgramAp where
+    type Semantics = Applicative
+    type View = ProgramViewAp
     singleton = ProgramAp . liftAp . liftYoneda
+    interpret = interpretAp
+    view = viewAp
 
 -- | Evaluate a 'ProgramAp' by interpreting each instruction as an
 -- 'Applicative' action. Example @Reader@ implementation:

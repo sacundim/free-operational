@@ -1,16 +1,14 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -- | @operational@-style 'Alternative' programs.  See
 -- "Control.Applicative.Operational" for guidance on how to use this
 -- module.
 module Control.Alternative.Operational 
-    ( ProgramAlt(..)
-    , singleton
-    , interpretAlt
-
+    ( module Control.Operational.Class
+    , ProgramAlt(..)
     , ProgramViewAlt(..)
-    , viewAlt
     ) where
 
 import Control.Applicative
@@ -25,7 +23,11 @@ newtype ProgramAlt instr a =
                } deriving (Functor, Applicative, Alternative)
 
 instance Operational ProgramAlt where
+    type Semantics = Alternative
+    type View = ProgramViewAlt
     singleton = ProgramAlt . liftAlt . liftYoneda
+    interpret = interpretAlt
+    view      = viewAlt
 
 
 interpretAlt :: forall instr f a.
