@@ -5,9 +5,10 @@
 -- "Control.Monad.Operational"\'s 'Program' type, using 'Free'
 -- directly.
 module Control.Monad.Operational.Simple 
-    ( Program(..)
-    , singleton
+    ( module Control.Operational.Class
+    , Program(..)
     , interpret
+    , fromProgram
     , ProgramView(..)
     , view
     ) where
@@ -35,6 +36,12 @@ interpret :: forall m instr a. (Functor m, Monad m) =>
 interpret evalI = retract . hoistFree evalF . toFree
     where evalF :: forall x. Yoneda instr x -> m x
           evalF (Yoneda f i) = fmap f (evalI i)
+
+-- | Lift a 'Program' to any 'Operational' instance at least as
+-- powerful as 'Monad'.
+fromProgram :: (Operational p, Functor (p instr), Monad (p instr)) => 
+               Program instr a -> p instr a
+fromProgram = interpret singleton
 
 data ProgramView instr a where
     Return :: a -> ProgramView instr a

@@ -8,6 +8,7 @@ module Control.Alternative.Operational
     ( ProgramAlt(..)
     , singleton
     , interpretAlt
+    , fromProgramAlt
 
     , ProgramViewAlt(..)
     , viewAlt
@@ -37,6 +38,9 @@ interpretAlt evalI = runAlt evalF . toAlt
     where evalF :: forall x. Yoneda instr x -> f x
           evalF (Yoneda k i) = fmap k (evalI i)
 
+fromProgramAlt :: (Operational p, Alternative (p instr)) => 
+                  ProgramAlt instr a -> p instr a
+fromProgramAlt = interpretAlt singleton
 
 data ProgramViewAlt instr a where
     Pure    :: a -> ProgramViewAlt instr a

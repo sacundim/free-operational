@@ -7,7 +7,8 @@
 module Control.MonadPlus.Operational
     ( ProgramP(..)
     , singleton
-    , interpret
+    , interpretP
+    , fromProgramP
       
     , ProgramViewP(..)
     , view
@@ -27,13 +28,17 @@ newtype ProgramP instr a =
 instance Operational ProgramP where
     singleton = ProgramP . liftF . liftYoneda
 
-interpret :: forall m instr a. (Functor m, MonadPlus m) => 
-             (forall x. instr x -> m x)
-          -> ProgramP instr a
-          -> m a
-interpret evalI = retract . hoistFree evalF . toFree
+interpretP :: forall m instr a. (Functor m, MonadPlus m) => 
+              (forall x. instr x -> m x)
+           -> ProgramP instr a
+           -> m a
+interpretP evalI = retract . hoistFree evalF . toFree
     where evalF :: forall x. Yoneda instr x -> m x
           evalF (Yoneda f i) = fmap f (evalI i)
+
+fromProgramP :: (Operational p, Functor (p instr), MonadPlus (p instr)) =>
+                ProgramP instr a -> p instr a
+fromProgramP = interpretP singleton
 
 
 data ProgramViewP instr a where

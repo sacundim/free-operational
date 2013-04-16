@@ -7,6 +7,7 @@ module Control.Applicative.Operational
     ( ProgramAp(..)
     , singleton
     , interpretAp
+    , fromProgramAp
 
     , ProgramViewAp(..)
     , viewAp
@@ -66,6 +67,11 @@ interpretAp evalI = runAp evalF . toAp
     where evalF :: forall x. Yoneda instr x -> f x
           evalF (Yoneda k i) = fmap k (evalI i)
 
+-- | Lift a 'ProgramAp' into any other 'Operational' program type that
+-- is at least as strong as 'Applicative'.
+fromProgramAp :: (Operational p, Applicative (p instr)) =>
+                 ProgramAp instr a -> p instr a
+fromProgramAp = interpretAp singleton
 
 
 -- | A friendly concrete tree view type for 'ProgramAp'.  Unlike the
