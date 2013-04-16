@@ -39,9 +39,8 @@ interpret evalI = retract . hoistFree (liftEvalI evalI) . toFree
 
 -- | Lift a 'Program' to any 'Operational' instance at least as
 -- powerful as 'Monad'.
-fromProgram :: (Operational instr (p instr), 
-                Functor (p instr), Monad (p instr)) => 
-               Program instr a -> p instr a
+fromProgram
+    :: (Operational instr m, Functor m, Monad m) => Program instr a -> m a
 fromProgram = interpret singleton
 
 data ProgramView instr a where

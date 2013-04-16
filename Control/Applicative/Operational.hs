@@ -69,8 +69,8 @@ interpretAp evalI = runAp (liftEvalI evalI) . toAp
 
 -- | Lift a 'ProgramAp' into any other 'Operational' program type that
 -- is at least as strong as 'Applicative'.
-fromProgramAp :: (Operational instr (p instr), Applicative (p instr)) =>
-                 ProgramAp instr a -> p instr a
+fromProgramAp
+    :: (Operational instr f, Applicative f) => ProgramAp instr a -> f a
 fromProgramAp = interpretAp singleton
 
 

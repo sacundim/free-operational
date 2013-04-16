@@ -67,23 +67,6 @@ interpretM :: (Functor m, Monad m) =>
 interpretM evalI = retract . transFreeT (liftEvalI evalI) . toFreeT
 
 
-{- 
-import Control.Monad.Trans.Reader as Canon
-
-data ReaderI r a where
-    Ask :: ReaderI r r
-
-runReaderT :: forall r m a. 
-              (Functor m, Monad m) => 
-              ProgramT (ReaderI r) m a -> Canon.ReaderT r m a
-runReaderT = interpretT evalI
-    where evalI :: forall m x.
-                   (Functor m, Monad m) =>
-                   ReaderI r x -> Canon.ReaderT r m x
-          evalI Ask = Canon.ask
--}
-
-
 data ProgramViewT instr m a where
     Return :: a -> ProgramViewT instr m a
     (:>>=) :: instr a -> (a -> ProgramT instr m b) -> ProgramViewT instr m b

@@ -37,9 +37,8 @@ interpretP evalI = retract . hoistFree evalF . toFree
     where evalF :: forall x. Yoneda instr x -> m x
           evalF (Yoneda f i) = fmap f (evalI i)
 
-fromProgramP :: (Operational instr (p instr),
-                 Functor (p instr), MonadPlus (p instr)) =>
-                ProgramP instr a -> p instr a
+fromProgramP
+    :: (Operational instr m, Functor m, MonadPlus m) => ProgramP instr a -> m a
 fromProgramP = interpretP singleton
 
 

@@ -30,7 +30,6 @@ newtype ProgramAlt instr a =
 instance Operational instr (ProgramAlt instr) where
     singleton = ProgramAlt . liftAlt . liftInstr
 
-
 interpretAlt :: forall instr f a.
                 Alternative f =>
                (forall x. instr x -> f x)
@@ -38,8 +37,8 @@ interpretAlt :: forall instr f a.
              -> f a
 interpretAlt evalI = runAlt (liftEvalI evalI) . toAlt
 
-fromProgramAlt :: (Operational instr (p instr), Alternative (p instr)) => 
-                  ProgramAlt instr a -> p instr a
+fromProgramAlt 
+    :: (Operational instr f, Alternative f) => ProgramAlt instr a -> f a
 fromProgramAlt = interpretAlt singleton
 
 data ProgramViewAlt instr a where

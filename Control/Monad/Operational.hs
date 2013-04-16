@@ -59,8 +59,8 @@ toFree = freeT2Free . toFreeT
 
 -- | Lift a 'Program' into any 'Operational' type at least as strong
 -- as 'Monad'.
-fromProgram :: (Operational instr m, Functor m, Monad m) => 
-               Program instr a -> m a
+fromProgram
+    :: (Operational instr m, Functor m, Monad m) => Program instr a -> m a
 fromProgram = interpret singleton
 
 -- | Lift a 'Program' into a 'ProgramT'.  Really the same as
