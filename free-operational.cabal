@@ -1,15 +1,10 @@
 name:                free-operational
-
--- The package version.  See the Haskell package versioning policy (PVP) 
--- for standards guiding when and how versions should be incremented.
--- http://www.haskell.org/haskellwiki/Package_versioning_policy
--- PVP summary:      +-+------- breaking API changes
---                   | | +----- non-breaking API additions
---                   | | | +--- code changes with no API change
-version:             0.1.0.0
-
+category:            Control
+version:             0.2.0.0
+build-type:          Simple
+cabal-version:       >=1.8
 synopsis:            Operational-style Applicative, Alternative, Monad and
-                      MonadPlus on top of free monads.
+                     MonadPlus on top of free monads.
 
 description:         
     A reimplementation of the @operational@ package
@@ -39,18 +34,13 @@ description:
 
 license:             BSD3
 license-file:        LICENSE
-
 author:              Luis Casillas
 maintainer:          luis@casillas.org
-
--- A copyright notice.
--- copyright:           
-
-category:            Control
-
-build-type:          Simple
-
-cabal-version:       >=1.8
+copyright:           2013 Luis Casillas
+bug-reports:         https://github.com/sacundim/free-operational/issues
+source-repository head
+  type:           git
+  location:       https://github.com/sacundim/free-operational
 
 
 library
