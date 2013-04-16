@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | A reconstruction of the @operational@ package in terms of the
@@ -27,10 +28,8 @@ module Control.Monad.Operational
     , toFree
     , interpret
 
-    , ProgramT(..)
-    , singleton
-    , ProgramViewT(..)
-    , viewT
+    , module Control.Monad.Trans.Operational
+
     , liftProgram
     ) where
 
@@ -41,6 +40,7 @@ import qualified Control.Monad.Free as Free
 import Control.Monad.Identity
 import Control.Monad.Trans
 import Control.Monad.Trans.Free
+import Control.Monad.Trans.Operational
 import Data.Functor.Yoneda.Contravariant
 
 type Program instr = ProgramT instr Identity
@@ -84,29 +84,6 @@ interpret :: forall m instr a. (Functor m, Monad m) =>
 interpret evalI = Free.retract . Free.hoistFree evalF . toFree
     where evalF :: forall x. Yoneda instr x -> m x
           evalF (Yoneda f i) = liftM f (evalI i)
-
-
-
-newtype ProgramT instr m a = 
-    ProgramT { -- | Interpret a program as a free monad transformer ('FreeT').
-               toFreeT :: FreeT (Yoneda instr) m a 
-             } deriving (Functor, Applicative, Monad, MonadTrans)
-
-
-singleton :: Monad m => instr a -> ProgramT instr m a
-singleton = ProgramT . liftF . liftYoneda
-
-
-data ProgramViewT instr m a where
-    Return :: a -> ProgramViewT instr m a
-    (:>>=) :: instr a -> (a -> ProgramT instr m b) -> ProgramViewT instr m b
-
-infixl 1 :>>=
-
-viewT :: Monad m => ProgramT instr m a -> m (ProgramViewT instr m a)
-viewT = liftM eval . runFreeT . toFreeT
-    where eval (Pure a) = Return a
-          eval (Free (Yoneda f i)) = i :>>= ProgramT . f
 
 liftProgram :: Monad m => Program instr a -> ProgramT instr m a
 liftProgram = ProgramT . hoistFreeT (return . runIdentity) . toFreeT

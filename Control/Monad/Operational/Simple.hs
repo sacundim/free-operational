@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | A simpler, non-transformer version of this package's
@@ -24,7 +25,7 @@ newtype Program instr a =
               toFree :: Free (Yoneda instr) a 
             } deriving (Functor, Applicative, Monad)
 
-instance Operational Program where
+instance Operational instr (Program instr) where
     singleton = Program . liftF . liftYoneda
 
 -- | Interpret a 'Program' by translating each instruction to a
@@ -39,7 +40,8 @@ interpret evalI = retract . hoistFree evalF . toFree
 
 -- | Lift a 'Program' to any 'Operational' instance at least as
 -- powerful as 'Monad'.
-fromProgram :: (Operational p, Functor (p instr), Monad (p instr)) => 
+fromProgram :: (Operational instr (p instr), 
+                Functor (p instr), Monad (p instr)) => 
                Program instr a -> p instr a
 fromProgram = interpret singleton
 

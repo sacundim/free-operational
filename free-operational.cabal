@@ -59,6 +59,7 @@ library
                     Control.Alternative.Operational,
                     Control.Monad.Operational,
                     Control.Monad.Operational.Simple,
+                    Control.Monad.Trans.Operational,
                     Control.MonadPlus.Operational
   
   -- Modules included in this library but not exported.

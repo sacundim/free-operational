@@ -1,11 +1,12 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | 'Applicative' programs over an @operational@-style instruction
 -- set, implemented on top of the 'Ap' free 'Applicative' type.
 module Control.Applicative.Operational 
-    ( ProgramAp(..)
-    , singleton
+    ( module Control.Operational.Class
+    , ProgramAp(..)
     , interpretAp
     , fromProgramAp
 
@@ -40,7 +41,7 @@ newtype ProgramAp instr a =
                toAp :: Ap (Yoneda instr) a 
               } deriving (Functor, Applicative)
 
-instance Operational ProgramAp where
+instance Operational instr (ProgramAp instr) where
     singleton = ProgramAp . liftAp . liftYoneda
 
 -- | Evaluate a 'ProgramAp' by interpreting each instruction as an
@@ -69,7 +70,7 @@ interpretAp evalI = runAp evalF . toAp
 
 -- | Lift a 'ProgramAp' into any other 'Operational' program type that
 -- is at least as strong as 'Applicative'.
-fromProgramAp :: (Operational p, Applicative (p instr)) =>
+fromProgramAp :: (Operational instr (p instr), Applicative (p instr)) =>
                  ProgramAp instr a -> p instr a
 fromProgramAp = interpretAp singleton
 

@@ -1,12 +1,13 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | @operational@-style programs for 'MonadPlus'.  See the
 -- documentation for "Control.Applicative.Operational" and
 -- "Control.Monad.Operational" for guidance on how to use this module.
 module Control.MonadPlus.Operational
-    ( ProgramP(..)
-    , singleton
+    ( module Control.Operational.Class
+    , ProgramP(..)
     , interpretP
     , fromProgramP
       
@@ -25,7 +26,7 @@ newtype ProgramP instr a =
                toFree :: Free (Yoneda instr) a 
              } deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
 
-instance Operational ProgramP where
+instance Operational instr (ProgramP instr) where
     singleton = ProgramP . liftF . liftYoneda
 
 interpretP :: forall m instr a. (Functor m, MonadPlus m) => 
@@ -36,7 +37,8 @@ interpretP evalI = retract . hoistFree evalF . toFree
     where evalF :: forall x. Yoneda instr x -> m x
           evalF (Yoneda f i) = fmap f (evalI i)
 
-fromProgramP :: (Operational p, Functor (p instr), MonadPlus (p instr)) =>
+fromProgramP :: (Operational instr (p instr),
+                 Functor (p instr), MonadPlus (p instr)) =>
                 ProgramP instr a -> p instr a
 fromProgramP = interpretP singleton
 

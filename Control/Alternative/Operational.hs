@@ -1,12 +1,13 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | @operational@-style 'Alternative' programs.  See
 -- "Control.Applicative.Operational" for guidance on how to use this
 -- module.
 module Control.Alternative.Operational 
-    ( ProgramAlt(..)
-    , singleton
+    ( module Control.Operational.Class
+    , ProgramAlt(..)
     , interpretAlt
     , fromProgramAlt
 
@@ -25,7 +26,7 @@ newtype ProgramAlt instr a =
                  toAlt :: Alt (Yoneda instr) a 
                } deriving (Functor, Applicative, Alternative)
 
-instance Operational ProgramAlt where
+instance Operational instr (ProgramAlt instr) where
     singleton = ProgramAlt . liftAlt . liftYoneda
 
 
@@ -38,7 +39,7 @@ interpretAlt evalI = runAlt evalF . toAlt
     where evalF :: forall x. Yoneda instr x -> f x
           evalF (Yoneda k i) = fmap k (evalI i)
 
-fromProgramAlt :: (Operational p, Alternative (p instr)) => 
+fromProgramAlt :: (Operational instr (p instr), Alternative (p instr)) => 
                   ProgramAlt instr a -> p instr a
 fromProgramAlt = interpretAlt singleton
 

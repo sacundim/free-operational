@@ -1,14 +1,12 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
--- | TODO: figure out how (and if) to do views.
 module Control.Monad.Trans.Operational
     ( ProgramT(..)
     , interpretT
-{- TODO:
     , ProgramViewT(..)
     , viewT
--}
     ) where
 
 import Control.Applicative
@@ -22,6 +20,9 @@ import Data.Functor.Yoneda.Contravariant
 newtype ProgramT instr m a = 
     ProgramT { toFreeT :: FreeT (Yoneda instr) m a 
              } deriving (Functor, Applicative, Monad, MonadTrans)
+
+instance Monad m => Operational instr (ProgramT instr m) where
+    singleton = ProgramT . liftF . liftYoneda
 
 -- | Given an intepretation of @instr x@ as actions over a given monad
 -- transformer @t@ (transforming over an arbitrary monad @m@),
@@ -63,3 +64,16 @@ runReaderT = interpretT evalI
                    ReaderI r x -> Canon.ReaderT r m x
           evalI Ask = Canon.ask
 -}
+
+
+data ProgramViewT instr m a where
+    Return :: a -> ProgramViewT instr m a
+    (:>>=) :: instr a -> (a -> ProgramT instr m b) -> ProgramViewT instr m b
+
+infixl 1 :>>=
+
+viewT :: Monad m => ProgramT instr m a -> m (ProgramViewT instr m a)
+viewT = liftM eval . runFreeT . toFreeT
+    where eval (Pure a) = Return a
+          eval (Free (Yoneda f i)) = i :>>= ProgramT . f
+
