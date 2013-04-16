@@ -14,6 +14,9 @@
 --   @operational@.  If you don't care for that,
 --   "Control.Monad.Operational.Simple" implements them directly in
 --   terms of 'Free'.
+--
+-- The 'ProgramT' and 'ProgramViewT' types and operations are
+-- reexported from "Control.Monad.Trans.Operational".
 module Control.Monad.Operational
     ( module Control.Operational.Class
     , Program
@@ -35,30 +38,17 @@ import Control.Monad.Free (Free)
 import qualified Control.Monad.Free as Free
 import Control.Monad.Identity
 import Control.Monad.Trans
+import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Free (FreeT)
 import qualified Control.Monad.Trans.Free as FreeT
 import Control.Monad.Trans.Operational
 import Control.Operational.Class
+import Control.Operational.Instruction
 import Data.Functor.Yoneda.Contravariant
 
+
+-- | Drop-in replacement for @operational@'s type synonym.
 type Program instr = ProgramT instr Identity
-
-type ProgramView instr = ProgramViewT instr Identity
-
-view :: Program instr a -> ProgramView instr a
-view = runIdentity . viewT
-
--- | This function works the same way as its counterpart in the
--- @operational@ package, using 'view' and 'ProgramView'.
-interpretWithMonad :: Monad m =>
-                      (forall x. instr x -> m x)
-                   -> Program instr a
-                   -> m a
-interpretWithMonad evalI = eval . view
-    where eval (Return a) = return a
-          eval (i :>>= k) = evalI i >>= interpretWithMonad evalI . k
-
-
 
 -- | The 'Free' monad action for a 'Program'.
 toFree :: Program instr a -> Free (Yoneda instr) a
@@ -68,6 +58,19 @@ toFree = freeT2Free . toFreeT
       freeT2Free = adjust . runIdentity . FreeT.runFreeT
           where adjust (FreeT.Pure a) = Free.Pure a
                 adjust (FreeT.Free fb) = Free.Free $ fmap freeT2Free fb
+
+-- | Lift a 'Program' into any 'Operational' type at least as strong
+-- as 'Monad'.
+fromProgram :: (Operational instr m, Functor m, Monad m) => 
+               Program instr a -> m a
+fromProgram = interpret singleton
+
+-- | Lift a 'Program' into a 'ProgramT'.  Really the same as
+-- 'fromProgram', but with a more restricted type; this function is a
+-- drop-in replacement for the eponymous function in @operational@.
+liftProgram :: Monad m => Program instr a -> ProgramT instr m a
+liftProgram = fromProgram
+
 
 -- | Interpret a 'Program' by interpreting each instruction as a
 -- monadic action.  Unlike 'interpretWithMonad', this soes not use
@@ -79,9 +82,25 @@ interpret :: forall m instr a. (Functor m, Monad m) =>
              (forall x. instr x -> m x)
           -> Program instr a
           -> m a
-interpret evalI = Free.retract . Free.hoistFree evalF . toFree
-    where evalF :: forall x. Yoneda instr x -> m x
-          evalF (Yoneda f i) = liftM f (evalI i)
+interpret evalI = runIdentityT . interpretTM (lift . evalI) . liftProgram
 
-liftProgram :: Monad m => Program instr a -> ProgramT instr m a
-liftProgram = interpret singleton
+-- | Drop-in replacement for the eponymous function in the
+-- @operational@ package.  This is like 'interpret' but with a
+-- slightly broader type, and the same implementation as in
+-- @operational@ (in terms of 'view').
+interpretWithMonad :: Monad m =>
+                      (forall x. instr x -> m x)
+                   -> Program instr a
+                   -> m a
+interpretWithMonad evalI = eval . view
+    where eval (Return a) = return a
+          eval (i :>>= k) = evalI i >>= interpretWithMonad evalI . k
+
+
+-- | Drop-in replacement for @operational@'s type synonym.
+type ProgramView instr = ProgramViewT instr Identity
+
+-- | Drop-in replacement for @operational@'s function.
+view :: Program instr a -> ProgramView instr a
+view = runIdentity . viewT
+

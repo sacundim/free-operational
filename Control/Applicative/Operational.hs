@@ -21,6 +21,7 @@ import Control.Applicative
 import Control.Applicative.Free (Ap, runAp, liftAp)
 import qualified Control.Applicative.Free as Free
 import Control.Operational.Class
+import Control.Operational.Instruction
 import Data.Functor.Yoneda.Contravariant
 
 
@@ -42,7 +43,7 @@ newtype ProgramAp instr a =
               } deriving (Functor, Applicative)
 
 instance Operational instr (ProgramAp instr) where
-    singleton = ProgramAp . liftAp . liftYoneda
+    singleton = ProgramAp . liftAp . liftInstr
 
 -- | Evaluate a 'ProgramAp' by interpreting each instruction as an
 -- 'Applicative' action. Example @Reader@ implementation:
@@ -64,9 +65,7 @@ interpretAp :: forall instr f a.
                (forall x. instr x -> f x)
             -> ProgramAp instr a 
             -> f a
-interpretAp evalI = runAp evalF . toAp
-    where evalF :: forall x. Yoneda instr x -> f x
-          evalF (Yoneda k i) = fmap k (evalI i)
+interpretAp evalI = runAp (liftEvalI evalI) . toAp
 
 -- | Lift a 'ProgramAp' into any other 'Operational' program type that
 -- is at least as strong as 'Applicative'.

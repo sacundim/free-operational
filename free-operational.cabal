@@ -55,6 +55,7 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:  Control.Operational.Class,
+                    Control.Operational.Instruction,
                     Control.Applicative.Operational,
                     Control.Alternative.Operational,
                     Control.Monad.Operational,
@@ -66,6 +67,7 @@ library
   -- other-modules:       
   
   build-depends:       base ==4.5.*,
+                       transformers ==0.3.*,
                        mtl ==2.1.*,
                        free ==3.3.*,
                        kan-extensions ==3.1.*

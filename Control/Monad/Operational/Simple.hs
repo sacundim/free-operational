@@ -17,6 +17,7 @@ module Control.Monad.Operational.Simple
 import Control.Applicative
 import Control.Monad.Free
 import Control.Operational.Class
+import Control.Operational.Instruction
 import Data.Functor.Yoneda.Contravariant
 
 
@@ -26,7 +27,7 @@ newtype Program instr a =
             } deriving (Functor, Applicative, Monad)
 
 instance Operational instr (Program instr) where
-    singleton = Program . liftF . liftYoneda
+    singleton = Program . liftF . liftInstr
 
 -- | Interpret a 'Program' by translating each instruction to a
 -- 'Monad' action.  Does not use 'view'.
@@ -34,9 +35,7 @@ interpret :: forall m instr a. (Functor m, Monad m) =>
              (forall x. instr x -> m x)
           -> Program instr a
           -> m a
-interpret evalI = retract . hoistFree evalF . toFree
-    where evalF :: forall x. Yoneda instr x -> m x
-          evalF (Yoneda f i) = fmap f (evalI i)
+interpret evalI = retract . hoistFree (liftEvalI evalI) . toFree
 
 -- | Lift a 'Program' to any 'Operational' instance at least as
 -- powerful as 'Monad'.

@@ -19,6 +19,7 @@ import Control.Applicative
 import qualified Control.Alternative.Free as Free
 import Control.Alternative.Free hiding (Pure)
 import Control.Operational.Class
+import Control.Operational.Instruction
 import Data.Functor.Yoneda.Contravariant
 
 newtype ProgramAlt instr a =
@@ -27,7 +28,7 @@ newtype ProgramAlt instr a =
                } deriving (Functor, Applicative, Alternative)
 
 instance Operational instr (ProgramAlt instr) where
-    singleton = ProgramAlt . liftAlt . liftYoneda
+    singleton = ProgramAlt . liftAlt . liftInstr
 
 
 interpretAlt :: forall instr f a.
@@ -35,9 +36,7 @@ interpretAlt :: forall instr f a.
                (forall x. instr x -> f x)
              -> ProgramAlt instr a 
              -> f a
-interpretAlt evalI = runAlt evalF . toAlt
-    where evalF :: forall x. Yoneda instr x -> f x
-          evalF (Yoneda k i) = fmap k (evalI i)
+interpretAlt evalI = runAlt (liftEvalI evalI) . toAlt
 
 fromProgramAlt :: (Operational instr (p instr), Alternative (p instr)) => 
                   ProgramAlt instr a -> p instr a
