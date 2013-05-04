@@ -2,3 +2,4 @@
 *~
 *.prof
 dist/
+cabal-dev/
