@@ -43,6 +43,21 @@ source-repository head
   location:       https://github.com/sacundim/free-operational
 
 
+test-suite tests
+  type:            exitcode-stdio-1.0
+  hs-source-dirs:  tests
+  Main-is:         Properties.hs
+  build-depends:   base ==4.5.*,
+                   mtl ==2.1.*,
+                   transformers ==0.3.*,
+                   free-operational ==0.2.0.0,
+                   test-framework ==0.8.*,
+                   test-framework-quickcheck2 ==0.3.*,  
+                   QuickCheck ==2.4.*,
+                   checkers ==0.3.*
+  ghc-options: -threaded
+  ghc-prof-options: -auto-all -threaded
+
 library
   exposed-modules:  Control.Operational.Class,
                     Control.Operational.Instruction,

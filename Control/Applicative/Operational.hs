@@ -12,6 +12,8 @@ module Control.Applicative.Operational
 
     , ProgramViewAp(..)
     , viewAp
+    , compile
+
     , foldProgramViewAp
     , instructions
     , AnyInstr(..)
@@ -161,15 +163,20 @@ infixl 4 :<**>
 
 -- | Materialize a 'ProgramAp' as a concrete tree.  Note that
 -- 'ProgramAp''s 'Functor' and 'Applicative' instances normalize their
--- programs, so the view term will not have to look like the code that
--- created it.  Instructions however will appear in the order that
--- their effects should happen, from left to right.
+-- programs, so the view term may not look like the code that created
+-- it.  Instructions however will appear in the order that their
+-- effects should happen, from left to right.
 viewAp :: ProgramAp instr a -> ProgramViewAp instr a
 viewAp = viewAp' . toAp
 
 viewAp' :: Ap (Yoneda instr) a -> ProgramViewAp instr a
 viewAp' (Free.Pure a) = Pure a
 viewAp' (Free.Ap (Yoneda f i) next) = i :<**> viewAp' (fmap (.f) next)
+
+-- | Compile a 'ProgramViewAp' back into a 'ProgramAp'.
+compile :: ProgramViewAp instr a -> ProgramAp instr a
+compile (Pure f) = pure f
+compile (instr :<**> k) = singleton instr <**> compile k
 
 
 foldProgramViewAp :: (forall x. instr x -> r -> r) 
