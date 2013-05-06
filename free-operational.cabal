@@ -4,7 +4,7 @@ version:             0.2.0.0
 build-type:          Simple
 cabal-version:       >=1.8
 synopsis:            Operational-style Applicative, Alternative, Monad and
-                     MonadPlus on top of free monads.
+                     MonadPlus, built with free monads.
 
 description:         
     A reimplementation of the @operational@ package

@@ -19,6 +19,7 @@
 -- reexported from "Control.Monad.Trans.Operational".
 module Control.Monad.Operational
     ( module Control.Operational.Class
+    , module Control.Monad.Trans.Operational
     , Program
     , toFree
     , fromProgram
@@ -27,7 +28,6 @@ module Control.Monad.Operational
     , interpretWithMonad
     , ProgramView
     , view
-    , module Control.Monad.Trans.Operational
     ) where
 
 import Control.Applicative
@@ -95,7 +95,7 @@ interpretWithMonad evalI = eval . view
           eval (i :>>= k) = evalI i >>= interpretWithMonad evalI . k
 
 
--- | Drop-in replacement for @operational@'s type synonym.
+-- | Drop-in replacement for @operational@'s eponymous type synonym.
 type ProgramView instr = ProgramViewT instr Identity
 
 -- | Drop-in replacement for @operational@'s function.

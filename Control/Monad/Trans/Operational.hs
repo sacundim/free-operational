@@ -35,8 +35,12 @@ instance Monad m => Operational instr (ProgramT instr m) where
 interpretT
     :: forall t m instr a. 
        (MonadTrans t, Functor (t m), Monad (t m), Functor m, Monad m) => 
-       (forall n x. (Functor n, Monad n) => instr x -> t n x)
-    -> ProgramT instr m a -> t m a
+       (forall n x. 
+        (Functor n, Monad n) =>
+        instr x -> t n x) -- ^ interpret @instr@ over a transformer
+                          -- @t@ and any wrapped monad @n@.
+    -> ProgramT instr m a 
+    -> t m a
 interpretT evalI = retractT . transFreeT evalF . toFreeT
     where evalF :: forall m x.
                    (Functor (t m), Monad (t m), Functor m, Monad m) => 
@@ -58,8 +62,11 @@ retract prog = do fab <- runFreeT prog
 -- transformed monad @t m@.  Read that sentence and the type
 -- carefully: the instruction interpretation can pick its choice of
 -- both @t@ and @m@.
-interpretTM :: (MonadTrans t, Functor (t m), Monad (t m), Monad m) => 
-               (forall x. instr x -> t m x) -> ProgramT instr m a -> t m a
+interpretTM
+    :: (MonadTrans t, Functor (t m), Monad (t m), Monad m) => 
+       (forall x. instr x -> t m x) -- ^ interpret @instr@ over @t m@
+    -> ProgramT instr m a
+    -> t m a
 interpretTM evalI = retractT . transFreeT (liftEvalI evalI) . toFreeT
 
 interpretM :: (Functor m, Monad m) => 

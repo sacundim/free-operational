@@ -70,7 +70,10 @@ interpretAp :: forall instr f a.
 interpretAp evalI = runAp (liftEvalI evalI) . toAp
 
 -- | Lift a 'ProgramAp' into any other 'Operational' program type that
--- is at least as strong as 'Applicative'.
+-- is at least as strong as 'Applicative'; e.g., lift an applicative
+-- program into a monadic one.  Note that not all applicatives are
+-- monads, so a lifted program may \"lose\" some of the
+-- interpretations that the original could be given.
 fromProgramAp
     :: (Operational instr f, Applicative f) => ProgramAp instr a -> f a
 fromProgramAp = interpretAp singleton
