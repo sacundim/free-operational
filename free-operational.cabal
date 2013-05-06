@@ -3,8 +3,7 @@ category:            Control
 version:             0.2.0.0
 build-type:          Simple
 cabal-version:       >=1.8
-synopsis:            Operational-style Applicative, Alternative, Monad and
-                     MonadPlus, built with free monads.
+synopsis:            Operational Applicative, Alternative, Monad and MonadPlus, built with free types.
 
 description:         
     A reimplementation of the @operational@ package
