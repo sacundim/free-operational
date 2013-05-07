@@ -64,6 +64,8 @@ Simple `Alternative` parser combinators:
 
     import Control.Applicative
     import Control.Alternative.Operational
+    import Control.Monad
+    import Control.Monad.Trans.State
     import Data.Functor.Compose (Compose(..))
     import Data.Traversable
     import Data.Maybe (listToMaybe)
@@ -84,7 +86,7 @@ Simple `Alternative` parser combinators:
     parens :: ProgramAlt ParserI Int
     parens = pure 0  <|>  char '(' *> fmap (+1) parens <* char ')'
 
-Example interpreter, pattern matching on the view type:
+Example "syntactic" interpreter, pattern matching on the view type:
 
     runParser :: ProgramAlt ParserI a -> String -> Maybe a
     runParser = fmap listToMaybe . eval . viewAlt
@@ -100,6 +102,21 @@ Example interpreter, pattern matching on the view type:
     
     asum :: Alternative f => [f a] -> f a
     asum = foldr (<|>) empty
+
+Example "denotational" interpreter:
+
+    runParser' :: ProgramAlt ParserI a -> String -> Maybe a
+    runParser' = (firstSuccess .) . runStateT . interpretAlt evalParserI
+        where firstSuccess [] = Nothing
+              firstSuccess ((a,""):_) = Just a
+              firstSuccess (_:xs) = firstSuccess xs
+    
+    evalParserI :: ParserI a -> StateT String [] a
+    evalParserI (Symbol c) = 
+        do str <- get
+           case str of
+             x:xs | c == x -> put xs >> return c
+             otherwise     -> mzero
 
 Simple static analysis example: enumerate the strings accepted by a
 (non-degenerate) parser.
@@ -179,11 +196,34 @@ parser by merging on common prefixes.
                                                                       's' :> ('e' :> ('d' :> Ok))]),
                                                 'l' :> ('o' :> ('n' :> ('e' :> Ok)))]]]))
 
+
 Sums of instruction sets
 ------------------------
 
 `Control.Operational.Instruction` reexports `Data.Functor.Coproduct`,
-which is rather useful in the context of this library.  
+which is rather useful in the context of this library:
+
+    import Control.Operational.Instruction
+    
+    -- | An alternative parser instruction set, and an evaluation.
+    data StringI a where
+        String :: String -> StringI String
+    
+    evalStringI :: StringI a -> StateT String [] a
+    evalStringI (String "") = return ""
+    evalStringI (String str) = 
+        do str' <- get
+           case str `stripPrefix` str' of
+             Nothing -> mzero
+             Just suffix -> put suffix >> return str
+    
+    -- | If we know how to interpret two instruction sets at the same
+    -- type, we know how to interpret their union.
+    runStringP :: ProgramAlt (Coproduct ParserI StringI) a
+               -> String
+               -> [(a, String)]
+    runStringP = runStateT . interpretAlt (coproduct evalParserI evalStringI)
+
 
 References
 ----------

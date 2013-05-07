@@ -33,7 +33,7 @@ prop_ApplicativeLaws :: ProgramAp (ReaderI String) (Int, Char, String)
 prop_ApplicativeLaws = runBatch . applicative
 
 prop_InterpretCompile :: ProgramAp (ReaderI String) Int -> Property
-prop_InterpretCompile prog = prog =-= compile (viewAp prog)
+prop_InterpretCompile prog = prog =-= compileAp (viewAp prog)
 
 
 runReader :: ProgramAp (ReaderI r) a -> r -> a

@@ -32,8 +32,8 @@
 -- > parens = pure 0  <|>  char '(' *> fmap (+1) parens <* char ')'
 -- > 
 -- > 
--- > -- | Interpret a parser program syntactically by pattern matching on
--- > -- its view.
+-- > -- | Interpret a parser program \"syntactically\" by pattern matching
+-- > -- on its view.
 -- > runParser :: ProgramAlt ParserI a -> String -> Maybe a
 -- > runParser = fmap listToMaybe . eval . viewAlt
 -- >     where
@@ -48,6 +48,22 @@
 -- > 
 -- > asum :: Alternative f => [f a] -> f a
 -- > asum = foldr (<|>) empty
+--
+-- Alternatively, programs may be interpreted in a more denotational
+-- style:
+--
+-- > runParser :: ProgramAlt ParserI a -> String -> Maybe a
+-- > runParser = (firstSuccess .) . runStateT . interpretAlt evalParserI
+-- >     where firstSuccess [] = Nothing
+-- >           firstSuccess ((a,""):_) = Just a
+-- >           firstSuccess (_:xs) = firstSuccess xs
+-- > 
+-- > evalParserI :: ParserI a -> StateT String [] a
+-- > evalParserI (Symbol c) = 
+-- >     do str <- get
+-- >        case str of
+-- >          x:xs | c == x -> put xs >> return c
+-- >          otherwise     -> mzero
 --
 -- One of the big \"powers\" of 'ProgramAlt' is that it allows for
 -- powerful static analysis of programs.  For example, we can

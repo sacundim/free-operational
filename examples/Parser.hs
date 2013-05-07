@@ -6,10 +6,12 @@ module Parser where
 
 import Control.Applicative
 import Control.Alternative.Operational
-import Control.Monad.Cont
-import Data.Functor.Compose (Compose(..))
+import Control.Operational.Instruction
+import Control.Monad
+import Control.Monad.Trans.State
 import Data.Traversable
 import Data.Maybe (listToMaybe)
+import Data.List (stripPrefix)
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
@@ -53,36 +55,20 @@ parens :: ProgramAlt ParserI Int
 parens = pure 0  <|>  char '(' *> fmap (+1) parens <* char ')'
 
 
+-- | Interpret a parser program denotationally, by evaluating each
+-- 'ParserI' instruction to an 'Alternative' action.
+runParser' :: ProgramAlt ParserI a -> String -> Maybe a
+runParser' = (firstSuccess .) . runStateT . interpretAlt evalParserI
+    where firstSuccess [] = Nothing
+          firstSuccess ((a,""):_) = Just a
+          firstSuccess (_:xs) = firstSuccess xs
 
--- | Alternative implementation: interpret a parser program
--- denotationally, by evaluating each 'ParserI' instruction to an
--- 'Alternative' action.
-runParser' :: forall a. ProgramAlt ParserI a -> String -> Maybe a
-runParser' = runParserD . interpretAlt evalParserI
-    
-evalParserI :: ParserI a -> ParserD a
+evalParserI :: ParserI a -> StateT String [] a
 evalParserI (Symbol c) = 
-    makeParserD $ \(x:xs) -> if c == x then pure c else empty
-
-
--- Here we'd like to use @Compose ((->) String) [] a@ as our denotation,
--- but if we try to make that into an 'Alternative' we get overlapping
--- instances.  Hence the @newtype@.
-newtype ParserD a = 
-    ParserD { unParserD :: (Compose ((->) String) []) a}
-            deriving (Functor, Applicative)
-
-instance Alternative ParserD where
-    empty = ParserD (Compose (pure empty))
-    ParserD (Compose a) <|> ParserD (Compose b) =
-        makeParserD $ liftA2 (<|>) a b
-
-makeParserD :: (String -> [a]) -> ParserD a
-makeParserD = ParserD . Compose
-
-runParserD :: ParserD a -> String -> Maybe a
-runParserD p = listToMaybe . (getCompose (unParserD p))
-
+    do str <- get
+       case str of
+         x:xs | c == x -> put xs >> return c
+         otherwise     -> mzero
 
 
 -- | Static analysis example: enumerate the strings accepted by a parser.
@@ -108,7 +94,6 @@ interleave = foldr interleave2 []
       interleave2 :: [a] -> [a] -> [a]
       interleave2 [] ys = ys
       interleave2 (x:xs) ys = x : interleave2 ys xs
-
 
 
 -- | Static analysis example: optimize a parser by merging shared
@@ -159,12 +144,18 @@ data Description = Ok
                    deriving Show
 
 
-{-
 data StringI a where
-    String :: String -> StringI StringI
+    String :: String -> StringI String
 
-evalStringI :: StringI a -> ParserD a
-evalStringI (String str) = makeParserD go
-    where go str' | str `isPrefixOf` str' = undefined
-                  | otherwise = empty
--}
+evalStringI :: StringI a -> StateT String [] a
+evalStringI (String "") = return ""
+evalStringI (String str) = 
+    do str' <- get
+       case str `stripPrefix` str' of
+         Nothing -> mzero
+         Just suffix -> put suffix >> return str
+
+runStringP :: ProgramAlt (Coproduct ParserI StringI) a
+           -> String
+           -> [(a, String)]
+runStringP = runStateT . interpretAlt (coproduct evalParserI evalStringI)
