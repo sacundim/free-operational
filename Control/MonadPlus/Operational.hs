@@ -45,13 +45,10 @@ fromProgramP = interpretP singleton
 data ProgramViewP instr a where
     Return :: a -> ProgramViewP instr a
     (:>>=) :: instr a -> (a -> ProgramP instr b) -> ProgramViewP instr b
-    MEmpty :: ProgramViewP instr a
-    MPlus  :: ProgramViewP instr a
-           -> ProgramViewP instr a
-           -> ProgramViewP instr a
+    MPlus  :: [ProgramViewP instr a] -> ProgramViewP instr a
 
 view :: ProgramP instr a -> ProgramViewP instr a
 view = eval . toFree 
     where eval (Pure a) = Return a
           eval (Free (Yoneda f i)) = i :>>= (ProgramP . f)
-          eval (Plus mas) = foldr MPlus MEmpty (map eval mas)
+          eval (Plus mas) = MPlus $ map eval mas

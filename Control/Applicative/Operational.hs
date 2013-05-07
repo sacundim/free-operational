@@ -12,7 +12,7 @@ module Control.Applicative.Operational
 
     , ProgramViewAp(..)
     , viewAp
-    , compile
+    , compileAp
 
     , foldProgramViewAp
     , instructions
@@ -39,6 +39,8 @@ import Data.Functor.Yoneda.Contravariant
 -- * <http://gergo.erdi.hu/blog/2012-12-01-static_analysis_with_applicatives/>
 -- 
 -- * <http://paolocapriotti.com/blog/2013/04/03/free-applicative-functors/>
+--
+-- See also the examples in "Control.Alternative.Operational".
 newtype ProgramAp instr a = 
     ProgramAp { -- | Interpret a 'ProgramAp' as a free applicative ('Ap').
                toAp :: Ap (Yoneda instr) a 
@@ -177,9 +179,9 @@ viewAp' (Free.Pure a) = Pure a
 viewAp' (Free.Ap (Yoneda f i) next) = i :<**> viewAp' (fmap (.f) next)
 
 -- | Compile a 'ProgramViewAp' back into a 'ProgramAp'.
-compile :: ProgramViewAp instr a -> ProgramAp instr a
-compile (Pure f) = pure f
-compile (instr :<**> k) = singleton instr <**> compile k
+compileAp :: ProgramViewAp instr a -> ProgramAp instr a
+compileAp (Pure f) = pure f
+compileAp (instr :<**> k) = singleton instr <**> compileAp k
 
 
 foldProgramViewAp :: (forall x. instr x -> r -> r) 

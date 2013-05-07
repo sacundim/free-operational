@@ -1,6 +1,6 @@
 name:                free-operational
 category:            Control
-version:             0.2.0.0
+version:             0.3.0.0
 build-type:          Simple
 cabal-version:       >=1.8
 synopsis:            Operational Applicative, Alternative, Monad and MonadPlus, built with free types.
@@ -30,6 +30,7 @@ description:
     * <http://paolocapriotti.com/blog/2013/04/03/free-applicative-functors/> (discussion: <http://www.reddit.com/r/haskell/comments/1bnql3/free_applicative_functors_icfp_submission/>)
     .
     See "Control.Applicative.Operational" for the bulk of the documentation.
+    "Control.Alternative.Operational" also has some significant examples.
 
 license:             BSD3
 license-file:        LICENSE
