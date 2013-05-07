@@ -9,9 +9,10 @@ import Control.Alternative.Operational
 import Control.Operational.Instruction
 import Control.Monad
 import Control.Monad.Trans.State
+import Data.Functor.Compose
 import Data.Traversable
 import Data.Maybe (listToMaybe)
-import Data.List (stripPrefix)
+import Data.List (find, stripPrefix)
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
@@ -49,6 +50,18 @@ runParser = fmap listToMaybe . eval . viewAlt
 asum :: Alternative f => [f a] -> f a
 asum = foldr (<|>) empty
 
+-- | This version is maybe more conventional than 'runParser'.
+runConventional :: ProgramAlt ParserI a -> String -> Maybe a
+runConventional = (succeed .) . eval . viewAlt
+    where eval :: ProgramViewAlt ParserI a -> String -> [(a, String)]
+          eval (Pure a) str = [(a, str)]
+          eval (Symbol c :<**> k) "" = []
+          eval (Symbol c :<**> k) (x:xs)
+               | c == x = [(k' c, str') | (k', str') <- eval k xs]
+               | otherwise = []
+          eval (Many ps) str = asum $ map (flip eval str) ps
+
+
 
 -- | Example parser: match parentheses and count depth.
 parens :: ProgramAlt ParserI Int
@@ -58,10 +71,13 @@ parens = pure 0  <|>  char '(' *> fmap (+1) parens <* char ')'
 -- | Interpret a parser program denotationally, by evaluating each
 -- 'ParserI' instruction to an 'Alternative' action.
 runParser' :: ProgramAlt ParserI a -> String -> Maybe a
-runParser' = (firstSuccess .) . runStateT . interpretAlt evalParserI
-    where firstSuccess [] = Nothing
-          firstSuccess ((a,""):_) = Just a
-          firstSuccess (_:xs) = firstSuccess xs
+runParser' = (succeed .) . runStateT . interpretAlt evalParserI
+
+succeed :: [(a, String)] -> Maybe a
+succeed = fmap fst . find step
+    where step (a, "") = True
+          step (_, _)  = False
+
 
 evalParserI :: ParserI a -> StateT String [] a
 evalParserI (Symbol c) = 
