@@ -65,7 +65,7 @@ runConventional = (succeed .) . eval . viewAlt
 
 -- | Example parser: match parentheses and count depth.
 parens :: ProgramAlt ParserI Int
-parens = pure 0  <|>  char '(' *> fmap (+1) parens <* char ')'
+parens = pure 0  <|>  fmap (+1) (char '(' *> parens <* char ')')
 
 
 -- | Interpret a parser program denotationally, by evaluating each
