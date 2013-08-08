@@ -17,7 +17,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Free
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Contravariant
+import Data.Functor.Yoneda.Reduction
 
 
 newtype ProgramT instr m a = 

@@ -1,6 +1,6 @@
 name:                free-operational
 category:            Control
-version:             0.3.0.0
+version:             0.4.0.0
 build-type:          Simple
 cabal-version:       >=1.8
 synopsis:            Operational Applicative, Alternative, Monad and MonadPlus, built with free types.
@@ -71,5 +71,5 @@ library
                        mtl >=2.1,
                        free >=3.3,
                        comonad-transformers >=3.0,
-                       kan-extensions >=3.1
+                       kan-extensions >=3.5
   

@@ -19,7 +19,7 @@ import Control.Applicative
 import Control.Monad
 import Control.MonadPlus.Free
 import Control.Operational.Class
-import Data.Functor.Yoneda.Contravariant
+import Data.Functor.Yoneda.Reduction
 
 newtype ProgramP instr a = 
     ProgramP { -- | Interpret the program as a free 'MonadPlus'.

@@ -22,7 +22,7 @@ module Control.Operational.Instruction
     ) where
 
 import Data.Functor.Coproduct
-import Data.Functor.Yoneda.Contravariant
+import Data.Functor.Yoneda.Reduction
 
 -- | Lift an operational instruction evaluator into a free 'Functor'
 -- evaluator.

@@ -24,7 +24,7 @@ import Control.Applicative.Free (Ap, runAp, liftAp)
 import qualified Control.Applicative.Free as Free
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Contravariant
+import Data.Functor.Yoneda.Reduction
 
 
 -- | An 'Applicative' program over instruction set @instr@.  This is

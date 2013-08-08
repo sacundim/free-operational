@@ -167,7 +167,7 @@ import qualified Control.Alternative.Free as Free
 import Control.Alternative.Free hiding (Pure)
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Contravariant
+import Data.Functor.Yoneda.Reduction
 
 newtype ProgramAlt instr a =
     ProgramAlt { -- | Interpret the program as a free 'Alternative' ('Alt').

@@ -42,7 +42,7 @@ import qualified Control.Monad.Trans.Free as FreeT
 import Control.Monad.Trans.Operational
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Contravariant
+import Data.Functor.Yoneda.Reduction
 
 
 -- | Drop-in replacement for @operational@'s type synonym.
