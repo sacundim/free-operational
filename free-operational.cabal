@@ -50,10 +50,10 @@ test-suite tests
   build-depends:   base ==4.*,
                    mtl >=2.1,
                    transformers >=0.3,
-                   free-operational >=0.2,
-                   test-framework >=0.8,
-                   test-framework-quickcheck2 >=0.3,  
-                   QuickCheck >=2.5,
+                   free-operational >=0.3,
+                   test-framework >=0.6,
+                   test-framework-quickcheck2 >=0.2,  
+                   QuickCheck >=2.4,
                    checkers ==0.3.1
 
 library
