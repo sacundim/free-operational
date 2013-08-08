@@ -167,11 +167,11 @@ import qualified Control.Alternative.Free as Free
 import Control.Alternative.Free hiding (Pure)
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Reduction
+import Data.Functor.Coyoneda
 
 newtype ProgramAlt instr a =
     ProgramAlt { -- | Interpret the program as a free 'Alternative' ('Alt').
-                 toAlt :: Alt (Yoneda instr) a 
+                 toAlt :: Alt (Coyoneda instr) a 
                } deriving (Functor, Applicative, Alternative)
 
 instance Operational instr (ProgramAlt instr) where
@@ -198,9 +198,9 @@ data ProgramViewAlt instr a where
 viewAlt :: ProgramAlt instr a -> ProgramViewAlt instr a
 viewAlt = viewAlt' . toAlt
 
-viewAlt' :: Alt (Yoneda instr) a -> ProgramViewAlt instr a
+viewAlt' :: Alt (Coyoneda instr) a -> ProgramViewAlt instr a
 viewAlt' (Free.Pure a) = Pure a
-viewAlt' (Free.Ap (Yoneda f i) next) = i :<**> viewAlt' (fmap (.f) next)
+viewAlt' (Free.Ap (Coyoneda f i) next) = i :<**> viewAlt' (fmap (.f) next)
 viewAlt' (Free.Alt xs) = Many $ map viewAlt' xs
 
 

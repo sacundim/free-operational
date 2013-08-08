@@ -17,11 +17,11 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Free
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Reduction
+import Data.Functor.Coyoneda
 
 
 newtype ProgramT instr m a = 
-    ProgramT { toFreeT :: FreeT (Yoneda instr) m a 
+    ProgramT { toFreeT :: FreeT (Coyoneda instr) m a 
              } deriving (Functor, Applicative, Monad, MonadTrans)
 
 instance Monad m => Operational instr (ProgramT instr m) where
@@ -44,8 +44,8 @@ interpretT
 interpretT evalI = retractT . transFreeT evalF . toFreeT
     where evalF :: forall m x.
                    (Functor (t m), Monad (t m), Functor m, Monad m) => 
-                   Yoneda instr x -> t m x
-          evalF (Yoneda f i) = fmap f (evalI i)
+                   Coyoneda instr x -> t m x
+          evalF (Coyoneda f i) = fmap f (evalI i)
 
 retractT :: (MonadTrans t, Functor (t m), Monad (t m), Monad m) => 
             FreeT (t m) m a -> t m a
@@ -83,5 +83,5 @@ infixl 1 :>>=
 viewT :: Monad m => ProgramT instr m a -> m (ProgramViewT instr m a)
 viewT = liftM eval . runFreeT . toFreeT
     where eval (Pure a) = Return a
-          eval (Free (Yoneda f i)) = i :>>= ProgramT . f
+          eval (Free (Coyoneda f i)) = i :>>= ProgramT . f
 

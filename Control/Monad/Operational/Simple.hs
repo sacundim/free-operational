@@ -18,12 +18,12 @@ import Control.Applicative
 import Control.Monad.Free
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Reduction
+import Data.Functor.Coyoneda
 
 
 newtype Program instr a = 
     Program { -- | Intepret the program as a 'Free' monad.
-              toFree :: Free (Yoneda instr) a 
+              toFree :: Free (Coyoneda instr) a 
             } deriving (Functor, Applicative, Monad)
 
 instance Operational instr (Program instr) where
@@ -50,4 +50,4 @@ data ProgramView instr a where
 view :: Program instr a -> ProgramView instr a
 view = eval . toFree 
     where eval (Pure a) = Return a
-          eval (Free (Yoneda f i)) = i :>>= (Program . f)
+          eval (Free (Coyoneda f i)) = i :>>= (Program . f)

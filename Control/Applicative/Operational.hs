@@ -24,7 +24,7 @@ import Control.Applicative.Free (Ap, runAp, liftAp)
 import qualified Control.Applicative.Free as Free
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Reduction
+import Data.Functor.Coyoneda
 
 
 -- | An 'Applicative' program over instruction set @instr@.  This is
@@ -43,7 +43,7 @@ import Data.Functor.Yoneda.Reduction
 -- See also the examples in "Control.Alternative.Operational".
 newtype ProgramAp instr a = 
     ProgramAp { -- | Interpret a 'ProgramAp' as a free applicative ('Ap').
-               toAp :: Ap (Yoneda instr) a 
+               toAp :: Ap (Coyoneda instr) a 
               } deriving (Functor, Applicative)
 
 instance Operational instr (ProgramAp instr) where
@@ -174,9 +174,9 @@ infixl 4 :<**>
 viewAp :: ProgramAp instr a -> ProgramViewAp instr a
 viewAp = viewAp' . toAp
 
-viewAp' :: Ap (Yoneda instr) a -> ProgramViewAp instr a
+viewAp' :: Ap (Coyoneda instr) a -> ProgramViewAp instr a
 viewAp' (Free.Pure a) = Pure a
-viewAp' (Free.Ap (Yoneda f i) next) = i :<**> viewAp' (fmap (.f) next)
+viewAp' (Free.Ap (Coyoneda f i) next) = i :<**> viewAp' (fmap (.f) next)
 
 -- | Compile a 'ProgramViewAp' back into a 'ProgramAp'.
 compileAp :: ProgramViewAp instr a -> ProgramAp instr a

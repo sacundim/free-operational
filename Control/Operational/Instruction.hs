@@ -22,13 +22,15 @@ module Control.Operational.Instruction
     ) where
 
 import Data.Functor.Coproduct
-import Data.Functor.Yoneda.Reduction
+import Data.Functor.Coyoneda
 
 -- | Lift an operational instruction evaluator into a free 'Functor'
 -- evaluator.
-liftEvalI :: Functor f => (forall x. instr x -> f x)  -> Yoneda instr a -> f a
-liftEvalI evalI (Yoneda f i) = fmap f (evalI i) 
+liftEvalI :: Functor f => 
+             (forall x. instr x -> f x)
+          -> Coyoneda instr a -> f a
+liftEvalI evalI (Coyoneda f i) = fmap f (evalI i) 
 
-liftInstr :: instr a -> Yoneda instr a
-liftInstr = liftYoneda
+liftInstr :: instr a -> Coyoneda instr a
+liftInstr = liftCoyoneda
 

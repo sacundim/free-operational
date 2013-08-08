@@ -42,14 +42,14 @@ import qualified Control.Monad.Trans.Free as FreeT
 import Control.Monad.Trans.Operational
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Yoneda.Reduction
+import Data.Functor.Coyoneda
 
 
 -- | Drop-in replacement for @operational@'s type synonym.
 type Program instr = ProgramT instr Identity
 
 -- | The 'Free' monad action for a 'Program'.
-toFree :: Program instr a -> Free (Yoneda instr) a
+toFree :: Program instr a -> Free (Coyoneda instr) a
 toFree = freeT2Free . toFreeT
     where
       freeT2Free :: Functor f => FreeT f Identity a -> Free f a
