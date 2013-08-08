@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/sacundim/free-operational.png)](http://travis-ci.org/sacundim/free-operational)
+
 free-operational
 ================
 
