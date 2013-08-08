@@ -43,18 +43,26 @@ source-repository head
   location:       https://github.com/sacundim/free-operational
 
 
+-- Build the properties test if we're building tests
+flag test-properties
+  default: False
+  manual: True
+
 test-suite tests
   type:            exitcode-stdio-1.0
   hs-source-dirs:  tests
   Main-is:         Properties.hs
-  build-depends:   base ==4.*,
-                   mtl >=2,
-                   transformers >=0.3,
-                   free-operational >=0.3,
-                   test-framework >=0.6,
-                   test-framework-quickcheck2 >=0.2,  
-                   QuickCheck >=2.4,
-                   checkers ==0.3.1
+  if !flag(test-properties)
+    buildable:       False
+  else
+    build-depends:   base ==4.*,
+                     mtl >=2,
+                     transformers >=0.3,
+                     free-operational >=0.3,
+                     test-framework >=0.6,
+                     test-framework-quickcheck2 >=0.2,  
+                     QuickCheck >=2.4,
+                     checkers ==0.3.1
 
 library
   exposed-modules:  Control.Operational.Class,
