@@ -63,11 +63,11 @@ fromProgram
     :: (Operational instr m, Functor m, Monad m) => Program instr a -> m a
 fromProgram = interpret singleton
 
--- | Lift a 'Program' into a 'ProgramT'.  Really the same as
+-- | Lift a 'Program' into a 'ProgramT'.  This could be thought of as
 -- 'fromProgram', but with a more restricted type; this function is a
 -- drop-in replacement for the eponymous function in @operational@.
 liftProgram :: Monad m => Program instr a -> ProgramT instr m a
-liftProgram = fromProgram
+liftProgram = ProgramT . FreeT.hoistFreeT (return . runIdentity) . toFreeT
 
 
 -- | Interpret a 'Program' by interpreting each instruction as a
