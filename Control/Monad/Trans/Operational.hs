@@ -14,7 +14,7 @@ module Control.Monad.Trans.Operational
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Trans.Free
+import Control.Monad.Trans.Free hiding (retract)
 import Control.Operational.Class
 import Control.Operational.Instruction
 import Data.Functor.Coyoneda
