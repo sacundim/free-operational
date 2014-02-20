@@ -71,7 +71,7 @@ liftProgram = ProgramT . FreeT.hoistFreeT (return . runIdentity) . toFreeT
 
 
 -- | Interpret a 'Program' by interpreting each instruction as a
--- monadic action.  Unlike 'interpretWithMonad', this soes not use
+-- monadic action.  Unlike 'interpretWithMonad', this does not use
 -- 'view' nor 'ProgramView'.
 --
 -- This function is not a drop-in replacement for 'interpretWithMonad'
