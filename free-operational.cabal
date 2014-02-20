@@ -79,6 +79,5 @@ library
                        mtl >=2,
                        free >=4.0,
                        comonad >=4.0,
-                       comonad-transformers >=4.0,
                        kan-extensions >=4.0 && < 4.1
   
