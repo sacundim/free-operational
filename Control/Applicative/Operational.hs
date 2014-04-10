@@ -24,7 +24,6 @@ import Control.Applicative.Free (Ap, runAp, liftAp)
 import qualified Control.Applicative.Free as Free
 import Control.Operational.Class
 import Control.Operational.Instruction
-import Data.Functor.Coyoneda
 
 
 -- | An 'Applicative' program over instruction set @instr@.  This is
@@ -43,11 +42,11 @@ import Data.Functor.Coyoneda
 -- See also the examples in "Control.Alternative.Operational".
 newtype ProgramAp instr a = 
     ProgramAp { -- | Interpret a 'ProgramAp' as a free applicative ('Ap').
-               toAp :: Ap (Coyoneda instr) a 
+               toAp :: Ap instr a 
               } deriving (Functor, Applicative)
 
 instance Operational instr (ProgramAp instr) where
-    singleton = ProgramAp . liftAp . liftInstr
+    singleton = ProgramAp . liftAp
 
 -- | Evaluate a 'ProgramAp' by interpreting each instruction as an
 -- 'Applicative' action. Example @Reader@ implementation:
@@ -69,7 +68,7 @@ interpretAp :: forall instr f a.
                (forall x. instr x -> f x)
             -> ProgramAp instr a 
             -> f a
-interpretAp evalI = runAp (liftEvalI evalI) . toAp
+interpretAp evalI = runAp evalI . toAp
 
 -- | Lift a 'ProgramAp' into any other 'Operational' program type that
 -- is at least as strong as 'Applicative'; e.g., lift an applicative
@@ -174,9 +173,9 @@ infixl 4 :<**>
 viewAp :: ProgramAp instr a -> ProgramViewAp instr a
 viewAp = viewAp' . toAp
 
-viewAp' :: Ap (Coyoneda instr) a -> ProgramViewAp instr a
+viewAp' :: Ap instr a -> ProgramViewAp instr a
 viewAp' (Free.Pure a) = Pure a
-viewAp' (Free.Ap (Coyoneda f i) next) = i :<**> viewAp' (fmap (.f) next)
+viewAp' (Free.Ap i next) = i :<**> viewAp' next
 
 -- | Compile a 'ProgramViewAp' back into a 'ProgramAp'.
 compileAp :: ProgramViewAp instr a -> ProgramAp instr a
