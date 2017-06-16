@@ -171,7 +171,7 @@ evalStringI (String str) =
          Nothing -> mzero
          Just suffix -> put suffix >> return str
 
-runStringP :: ProgramAlt (Coproduct ParserI StringI) a
+runStringP :: ProgramAlt (Sum ParserI StringI) a
            -> String
            -> [(a, String)]
 runStringP = runStateT . interpretAlt (coproduct evalParserI evalStringI)

@@ -199,10 +199,11 @@ viewAlt :: ProgramAlt instr a -> ProgramViewAlt instr a
 viewAlt = viewAlt' . toAlt
 
 viewAlt' :: Alt (Coyoneda instr) a -> ProgramViewAlt instr a
-viewAlt' (Free.Pure a) = Pure a
-viewAlt' (Free.Ap (Coyoneda f i) next) = i :<**> viewAlt' (fmap (.f) next)
-viewAlt' (Free.Alt xs) = Many $ map viewAlt' xs
+viewAlt' (Free.Alt xs) = Many $ map viewAltF' xs
 
+viewAltF' :: AltF (Coyoneda instr) a -> ProgramViewAlt instr a
+viewAltF' (Free.Pure a) = Pure a
+viewAltF' (Free.Ap (Coyoneda f i) next) = i :<**> viewAlt' (fmap (.f) next)
 
 compileAlt :: ProgramViewAlt instr a -> ProgramAlt instr a
 compileAlt (Pure a) = pure a

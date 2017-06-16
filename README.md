@@ -202,7 +202,7 @@ parser by merging on common prefixes.
 Sums of instruction sets
 ------------------------
 
-`Control.Operational.Instruction` reexports `Data.Functor.Coproduct`,
+`Control.Operational.Instruction` reexports `Data.Functor.Sum`,
 which is rather useful in the context of this library:
 
     import Control.Operational.Instruction
@@ -221,7 +221,7 @@ which is rather useful in the context of this library:
     
     -- | If we know how to interpret two instruction sets at the same
     -- type, we know how to interpret their union.
-    runStringP :: ProgramAlt (Coproduct ParserI StringI) a
+    runStringP :: ProgramAlt (Sum ParserI StringI) a
                -> String
                -> [(a, String)]
     runStringP = runStateT . interpretAlt (coproduct evalParserI evalStringI)

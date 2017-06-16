@@ -17,23 +17,29 @@ module Control.MonadPlus.Operational
 
 import Control.Applicative
 import Control.Monad
-import Control.MonadPlus.Free
+import Control.Monad.Trans.Free
 import Control.Operational.Class
 import Data.Functor.Coyoneda
 
 newtype ProgramP instr a = 
     ProgramP { -- | Interpret the program as a free 'MonadPlus'.
-               toFree :: Free (Coyoneda instr) a 
+               toFree :: FreeT (Coyoneda instr) [] a
              } deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
 
 instance Operational instr (ProgramP instr) where
     singleton = ProgramP . liftF . liftCoyoneda
 
+
+retractPlus :: MonadPlus f => FreeT f [] a -> f a
+retractPlus (FreeT m) = foldr (mplus . go) mzero m where
+    go (Pure a)  = return a
+    go (Free as) = as >>= retractPlus
+
 interpretP :: forall m instr a. (Functor m, MonadPlus m) => 
               (forall x. instr x -> m x)
            -> ProgramP instr a
            -> m a
-interpretP evalI = retract . hoistFree evalF . toFree
+interpretP evalI = retractPlus . transFreeT evalF . toFree
     where evalF :: forall x. Coyoneda instr x -> m x
           evalF (Coyoneda f i) = fmap f (evalI i)
 
@@ -49,6 +55,6 @@ data ProgramViewP instr a where
 
 view :: ProgramP instr a -> ProgramViewP instr a
 view = eval . toFree 
-    where eval (Pure a) = Return a
-          eval (Free (Coyoneda f i)) = i :>>= (ProgramP . f)
-          eval (Plus mas) = MPlus $ map eval mas
+    where eval' (Pure a) = Return a
+          eval' (Free (Coyoneda f i)) = i :>>= (ProgramP . f)
+          eval (FreeT mas) = MPlus $ map eval' mas
